@@ -217,14 +217,14 @@ classdef XYEE
 %  E. P. J. Merkx and E. van der Kolk, 
 %  "Method for the Detailed Characterization of Cosputtered Inorganic 
 %  Luminescent Material Libraries," ACS Comb. Sci., vol. 20, no. 11, 
-%  pp. 595–601, Nov. 2018.
+%  pp. 595?601, Nov. 2018.
 % 
 %  and
 %
 %  E. P. J. Merkx, S. van Overbeek, and E. van der Kolk, 
 %  "Functionalizing window coatings with luminescence centers by 
 %   combinatorial sputtering of scatter-free amorphous SiAlON:Eu2+ thin 
-%   film composition libraries," J. Lumin., vol. 208, pp. 51–56, Apr. 2019.
+%   film composition libraries," J. Lumin., vol. 208, pp. 51?56, Apr. 2019.
 %
 % CC-AT-BY 2016
 %
@@ -232,11 +232,13 @@ classdef XYEE
     properties
         fname
         experiment
+        substrate
         em_wl
         ex_wl
         xycoords
         spectrum
         dark
+        lamp
         power
         fitdata = {}
         time
@@ -272,14 +274,17 @@ classdef XYEE
                 end
             end
             
-            obj.experiment = h5readatt(obj.fname, '/', 'experiment');
+            info = h5info(obj.fname);
+%             obj.experiment = h5readatt(obj.fname, '/', 'experiment');
+            obj.experiment = string({info.Groups.Name}); 
+            obj.experiment = erase(obj.experiment, '/'); 
             
             switch obj.experiment
                 case 'ExcitationEmission'
                     obj = process_ee(obj);
                 case 'Decay'
                     obj = process_decay(obj, varargin);
-                case 'Transmission'
+                case "transmission"
                     obj = process_transmission(obj, varargin);
             end
             
@@ -300,7 +305,7 @@ classdef XYEE
                     obj = fit_ee(obj, varargin);
                 case 'Decay'
                     obj = fit_decay(obj, varargin);
-                case 'Transmission'
+                case "transmission" 
                     obj = fit_transmission5(obj, varargin);
             end
         end

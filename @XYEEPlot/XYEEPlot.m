@@ -23,7 +23,7 @@ classdef XYEEPlot
                     end
                 case 'Decay'
                     obj = rgb_decay_process(obj);
-                case 'Transmission'
+                case "transmission"
                     obj = rgb_transmission_process(obj);
             end
                         
@@ -63,7 +63,7 @@ classdef XYEEPlot
                         else
                             obj = rgb_decay_plot(obj);
                         end
-                    case 'Transmission'
+                    case "transmission"
                         obj = rgb_transmission_plot(obj, varargin);
                 end
             end

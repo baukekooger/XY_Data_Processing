@@ -10,7 +10,7 @@ function [ obj ] = rgb_transmission_process( obj )
 %     rgb = rand([size(obj.XYEEobj.spectrum,1) size(obj.XYEEobj.spectrum,2)]);
     sp = shiftdim(obj.XYEEobj.spectrum, 2);
     em_wl = obj.XYEEobj.em_wl;
-    inx = ( (em_wl>500) & (em_wl<600) );
+    inx = ( (em_wl>250) & (em_wl<900) );
     rgb = squeeze(trapz(obj.XYEEobj.em_wl(inx), sp(inx,:,:)));
 %     rgb = squeeze(obj.XYEEobj.spectrum(:,:,find(em_wl>=350,1)));
 %     rgb = permute(rgb, [2 1]);

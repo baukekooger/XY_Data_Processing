@@ -1,0 +1,49 @@
+excitation_emission:
+  widget_file_excitation_emission:
+    lineEdit_directory: ''
+    lineEdit_sample: ''
+    plainTextEdit_comments: ''
+  widget_laser_excitation_emission:
+    doubleSpinBox_wavelength_start: 0.0
+    doubleSpinBox_wavelength_step: 0.0
+    doubleSpinBox_wavelength_stop: 0.0
+    spinBox: 0
+  widget_powermeter_excitation_emission:
+    doubleSpinBox_integrationtime: 0.0
+  widget_shuttercontrol_excitation_emission: {}
+  widget_spectrometer_excitation_emission:
+    doubleSpinBox_averageing_alignment: 0.0
+    doubleSpinBox_averageing_experiment: 0.0
+    doubleSpinBox_integration_time_alignment: 0.0
+    doubleSpinBox_integration_time_experiment: 0.0
+  widget_xystage_excitation_emission:
+    doubleSpinBox_x: 0.0
+    doubleSpinBox_x_start: 0.0
+    doubleSpinBox_x_stop: 0.0
+    doubleSpinBox_y: 0.0
+    doubleSpinBox_y_start: 0.0
+    doubleSpinBox_y_stop: 0.0
+    spinBox_x_num: 0
+    spinBox_y_num: 0
+transmission:
+  widget_file_transmission:
+    comboBox_substrate: 0
+    lineEdit_directory: C:/Users/bauke/OneDrive/Bureaublad/TestfilesXY
+    lineEdit_sample: B10
+    plainTextEdit_comments: BSiAlO:Sm
+  widget_spectrometer_transmission:
+    spinBox_averageing_alignment: 1
+    spinBox_averageing_experiment: 1
+    spinBox_integration_time_alignment: 1000
+    spinBox_integration_time_experiment: 5000
+  widget_xystage_transmission:
+    checkBox_homed_x: true
+    checkBox_homed_y: true
+    doubleSpinBox_x: 25.0
+    doubleSpinBox_y: 25.0
+    spinBox_x_num: 8
+    spinBox_x_off_left: 5
+    spinBox_x_off_right: 5
+    spinBox_y_num: 8
+    spinBox_y_off_bottom: 5
+    spinBox_y_off_top: 5

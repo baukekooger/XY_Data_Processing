@@ -22,7 +22,7 @@ if(~isempty(obj.XYEEobj.fitdata))
     ext_coeff_plot = subplot(3,4,12);
 else
     spectrum_plot = subplot(1,5,[1 2 3 4]);
-    rgb_plot = subplot(1,5,[5]);
+    rgb_plot = subplot(1,5,5);
 end
 
 x = squeeze(obj.XYEEobj.xycoords(:,1,1));
@@ -71,8 +71,24 @@ imagesc(x,y,permute(obj.rgb, [2 1 3]));
 xlabel(rgb_plot, 'x (mm)');
 ylabel(rgb_plot, 'y (mm)');
 axis equal;
-set(rgb_plot, 'XLim', [x(1) x(end)]);
-set(rgb_plot, 'YLim', [y(1) y(end)]);
+if length(x) > 1
+    xdiff = (x(2)-x(1))/2;
+else
+    xdiff = 0;
+end
+if length(y) > 1
+    ydiff = (y(2) - y(1))/2; 
+else
+    ydiff = 0; 
+end
+
+set(rgb_plot, 'XLim', [x(1)-xdiff x(end)+xdiff]);
+set(rgb_plot, 'YLim', [y(1)-ydiff y(end)+ydiff]);
+set(rgb_plot, 'XTick', x);
+set(rgb_plot, 'YTick', y);
+xtickformat(rgb_plot,'%.1f'); 
+ytickformat(rgb_plot,'%.1f'); 
+
 try
     rsq = cellfun(@(x)(x.rsquare),obj.XYEEobj.fitdata.gof);
     d = cellfun(@(x)(x.d),obj.XYEEobj.fitdata.fitresult);
@@ -132,11 +148,14 @@ end
 
 % Setup the datapicker window
 figure(datapicker);
+
 h = imagesc(permute(obj.rgb, [2 1 3]));
 datapicker_ax = h.Parent;
 axis equal;
-set(datapicker_ax, 'XLim', [1 numel(x)]);
-set(datapicker_ax, 'YLim', [1 numel(y)]);
+set(datapicker_ax, 'XTick', 1:numel(x));
+set(datapicker_ax, 'YTick', 1:numel(y));
+set(datapicker_ax, 'XLim', [(1-0.5) (numel(x)+0.5)]);
+set(datapicker_ax, 'YLim', [(1-0.5) (numel(y)+0.5)]);
 
     function flag=isMultipleCall()
       flag = false; 
@@ -161,7 +180,7 @@ set(datapicker_ax, 'YLim', [1 numel(y)]);
 % ylimit = (reshape(spectrum, numel(spectrum), 1));
 % ylimit = nanmax(ylimit(100:end-100))*1.5;
 ylimit = [0 1.1];
-set(spectrum_plot, 'YLim', ylimit);
+% set(spectrum_plot, 'YLim', ylimit);
 set(spectrum_plot, 'XLim', [obj.XYEEobj.em_wl(1) obj.XYEEobj.em_wl(end)]);
 
 % Reverse all x-directions
@@ -251,7 +270,7 @@ set(rgb_plot, 'XDir', 'reverse');
         
         xlabel(spectrum_plot, 'Wavelength (nm)');
         ylabel(spectrum_plot, 'Transmittance');
-        set(spectrum_plot, 'YLim', ylimit);
+%         set(spectrum_plot, 'YLim', ylimit);
         set(spectrum_plot, 'XLim', xlimit);
         set(spectrum_plot, 'YScale', yscale);
         

@@ -19,13 +19,13 @@ end
 warning('off', 'curvefit:prepareFittingData:removingNaNAndInf');
 
 %% Set required variables
-xnum = h5readatt(obj.fname, '/', 'xnum');
-ynum = h5readatt(obj.fname, '/', 'ynum');
+xnum = h5readatt(obj.fname, '/transmission/settings/xystage', 'xnum');
+ynum = h5readatt(obj.fname, '/transmission/settings/xystage', 'ynum');
 finfo = ncinfo(obj.fname);
-dimnames = {finfo.Dimensions.Name};
-dimsizes = [finfo.Dimensions.Length];
+dimnames = {finfo.Groups.Dimensions.Name};
+dimsizes = [finfo.Groups.Dimensions.Length];
 em_sz = dimsizes(strcmp('emission_wavelengths', dimnames));
-obj.em_wl = unique(h5read(obj.fname, '/x000y000/emission'));
+obj.em_wl = unique(h5read(obj.fname, '/transmission/dark/emission'));
 
 % deuterium_peak = ((obj.em_wl>654) & (obj.em_wl<659));
 
@@ -33,9 +33,13 @@ obj.spectrum = NaN(xnum, ynum, em_sz);
 obj.xycoords = NaN(xnum, ynum, 2);
 
 %% Read in all the data
+
+obj.dark = h5read(obj.fname, '/transmission/dark/spectrum'); 
+obj.lamp = h5read(obj.fname, '/transmission/lamp/spectrum')-obj.dark; 
+
 for x=1:xnum
     for y=1:ynum
-        group = sprintf('/x%03dy%03d/',x-1,y-1);
+        group = sprintf('/transmission/x%dy%d/',x,y);
         try
             transmission = h5read(obj.fname, [group 'spectrum'])';
         catch
@@ -55,26 +59,20 @@ end
 %% Turn all warnings back on
 warning('on', 'curvefit:prepareFittingData:removingNaNAndInf');
 
-S = reshape(sum(obj.spectrum,3), [xnum ynum]);
 if (autocorrect || remove_dark)
-    % Remove Dark
-    [~, ind] = fullmin(S);
-    [subx, suby] = ind2sub(size(S), ind);
-    obj.dark = repmat(obj.spectrum(subx, suby, :), ...
-        [xnum ynum 1]);
-    obj.spectrum = obj.spectrum - obj.dark;
-end
-if autocorrect
-    % Divide by light
-    % Light is defined coming from the first row/column of measurements
-    if sum(squeeze(obj.spectrum(:, 1, :))) > sum(squeeze(obj.spectrum(1, :, :)))
-        obj.spectrum = obj.spectrum ./ ...
-                repmat(obj.spectrum(:, 1, :), [1 ynum 1]);
-    else
-        obj.spectrum = obj.spectrum ./ ...
-                repmat(obj.spectrum(1, :, :), [xnum 1 1]);
+    for ii = 1:xnum
+        for jj = 1:ynum
+            obj.spectrum(ii,jj,:) = squeeze(obj.spectrum(ii,jj,:)) - obj.dark; 
+        end
     end
 end
+if autocorrect
+    for ii = 1:xnum
+        for jj = 1:ynum
+            obj.spectrum(ii,jj,:) = squeeze(obj.spectrum(ii,jj,:)) ./ obj.lamp; 
+        end
+    end
 
+end
 end
 
