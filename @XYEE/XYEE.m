@@ -232,16 +232,25 @@ classdef XYEE
     properties
         fname
         experiment
+        experimentname
+        experiments
+        comment
         substrate
-        em_wl
-        ex_wl
-        xycoords
-        spectrum
-        dark
-        lamp
-        power
-        fitdata = {}
-        time
+        filter
+        laser = struct('wlnum', 'n/a', 'excitation_wavelengths', [], ...
+            'energy_level', 'n/a')
+        spectrometer = struct('type', 'n/a', 'integration_time', 'n/a', ...
+            'averageing', 'n/a', 'fiber', 'n/a', 'wavelengths', [], ...
+            'spectra', [], 'darkspectrum', [], 'lampspectrum', []) 
+        digitizer = struct('type', 'n/a', 'sample_period', 'n/a', ...
+            'samples', 'n/a', 'active_channels', [],...
+            'post_trigger_size', 'n/a', 'spectra', [])
+        powermeter = struct('sensor', 'n/a', 'integration_time', 'n/a') 
+        pmt = struct('type', 'n/a', 'voltage', 'n/a')
+        xystage = struct('type', [], 'coordinates', [], ...
+            'xnum', 'n/a', 'ynum', 'n/a')
+        fitdata = {} 
+        
     end
     
     methods
@@ -274,15 +283,13 @@ classdef XYEE
                 end
             end
             
-            info = h5info(obj.fname);
-%             obj.experiment = h5readatt(obj.fname, '/', 'experiment');
-            obj.experiment = string({info.Groups.Name}); 
-            obj.experiment = erase(obj.experiment, '/'); 
+            obj = pick_experiment(obj); 
+            obj = read_attributes(obj);  
             
             switch obj.experiment
-                case 'ExcitationEmission'
+                case 'excitation_emission'
                     obj = process_ee(obj);
-                case 'Decay'
+                case 'decay'
                     obj = process_decay(obj, varargin);
                 case "transmission"
                     obj = process_transmission(obj, varargin);
@@ -301,9 +308,9 @@ classdef XYEE
         end
         function obj = fit(obj, varargin)
             switch obj.experiment
-                case 'ExcitationEmission'
+                case 'excitation_emission'
                     obj = fit_ee(obj, varargin);
-                case 'Decay'
+                case 'decay'
                     obj = fit_decay(obj, varargin);
                 case "transmission" 
                     obj = fit_transmission5(obj, varargin);
@@ -313,6 +320,8 @@ classdef XYEE
     
     % Private methods
     methods %(Access=protected)
+        obj=pick_experiment(obj)
+        obj=read_attributes(obj) 
         obj=process_ee(obj);
         obj=process_decay(obj, varargin);
         obj=process_transmission(obj, varargin);

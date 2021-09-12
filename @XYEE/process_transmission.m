@@ -39,7 +39,7 @@ obj.lamp = h5read(obj.fname, '/transmission/lamp/spectrum')-obj.dark;
 
 for x=1:xnum
     for y=1:ynum
-        group = sprintf('/transmission/x%dy%d/',x,y);
+        group = sprintf([obj.experimentname '/x%dy%d/',x,y]);
         try
             transmission = h5read(obj.fname, [group 'spectrum'])';
         catch

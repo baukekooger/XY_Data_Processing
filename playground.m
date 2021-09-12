@@ -4,9 +4,14 @@ close all
 
 fname = uigetfile('*.hdf5'); 
 info = h5info(fname);
-experiments = string({info.Groups.Name}); 
+experiments = {info.Groups.Name}; 
 experiments = erase(experiments, '/'); 
 
+
+
+
+
+%% 
 transmissioncontents = string({info.Groups.Groups.Name});
 transmissioncontents = erase(transmissioncontents, '/transmission/'); 
 data.emission_wavelengths = h5read(fname,'/transmission/emission_wavelengths');
