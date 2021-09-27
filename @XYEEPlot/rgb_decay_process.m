@@ -6,7 +6,7 @@ function [ obj ] = rgb_decay_process( obj )
     %   Last revision:      January 3rd 2018
     %   Original version:   December 12th 2017
     
-    spectrum = obj.XYEEobj.spectrum; % (x, y, ex, em, t)
+    spectrum = obj.XYEEobj.digitizer.spectra; % (x, y, ex, em, t)
     
     sz = size(spectrum);
     tau = zeros(sz(1:end-1));

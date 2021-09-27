@@ -1,19 +1,15 @@
 function [ obj ] = rgb_transmission_process( obj )
-    % RGB_EM_PROCESS translates an XYEE spectral dataset to RGB and CIE
-    % coordinates
-    %
-    %   Author:             Evert PJ Merkx
-    %   Contact:            e.p.j.merkx@tudelft.nl
-    %   Last revision:      October 10th 2017
-    %   Original version:   May 19th 2017
-    
-%     rgb = rand([size(obj.XYEEobj.spectrum,1) size(obj.XYEEobj.spectrum,2)]);
-    sp = shiftdim(obj.XYEEobj.spectrum, 2);
-    em_wl = obj.XYEEobj.em_wl;
-    inx = ( (em_wl>250) & (em_wl<900) );
-    rgb = squeeze(trapz(obj.XYEEobj.em_wl(inx), sp(inx,:,:)));
-%     rgb = squeeze(obj.XYEEobj.spectrum(:,:,find(em_wl>=350,1)));
-%     rgb = permute(rgb, [2 1]);
+% integrates each spectrum to produce a scalar as an indicator for the rgb
+% plot
+% nan and inf values are replaced by zeros and first and last 50 values are
+% discarded because they can be noisy 
+
+    spectra = shiftdim(obj.XYEEobj.spectrometer.spectra, 2); 
+    spectra(isnan(spectra)) = 0;
+    spectra(isinf(spectra)) = 0;
+
+    rgb = squeeze(trapz(spectra(50:end-50,:,:)));
     obj.rgb = rgb;
+
 end
 

@@ -2,44 +2,65 @@ function [obj] = read_attributes(obj)
 % reads the attributes of the measurement file such as the comments,
 % substrate used and instrument settings  
 % modify this file if new attributes are added in the experiment software
+% all attributes currently defined in settings folder only 
 
-obj.comment = h5readatt(obj.fname, ['/' obj.experimentname], 'comment');
-
-settingsinfo = h5info(obj.fname, ['/' obj.experimentname '/settings']); 
+settingsinfo = h5info(obj.fname, '/settings'); 
 instrumentfolders = {settingsinfo.Groups.Name}; 
 
 instruments = cell(1,length(instrumentfolders));
 for ii = 1:length(instruments) 
     instruments{ii} = erase(instrumentfolders{ii}, ...
-        ['/' obj.experimentname '/settings/']); 
+        '/settings/'); 
     switch instruments{ii}
+        case 'general'
+            obj.experiment =  h5readatt(obj.fname, ...
+                '/settings/general', 'experiment');
+            obj.sample = h5readatt(obj.fname, ...
+                '/settings/general', 'sample');
+            obj.comment = h5readatt(obj.fname, ...
+                '/settings/general', 'comment');
+            obj.substrate = h5readatt(obj.fname, ...
+                '/settings/general', 'substrate');
+            obj.filter = h5readatt(obj.fname, ...
+                '/settings/general', 'filter'); 
         case 'digitizer'
-            obj.digitizer.type = 'not implemented yet';
-            obj.digitizer.active_channels = ...
-                h5readatt(obj.fname, ['/' obj.experimentname '/settings/digitizer'], 'active_channels');
+            obj.digitizer.model = h5readatt(obj.fname, ...
+                '/settings/digitizer', 'model');
+            obj.digitizer.active_channels = h5readatt(obj.fname, ...
+                '/settings/digitizer', 'active_channels');
             obj.digitizer.post_trigger_size = h5readatt(obj.fname, ...
-                ['/' obj.experimentname '/settings/digitizer'], 'post_trigger_size');
-            obj.digitizer.sample_period = 'not implemented yet'; 
+                 '/settings/digitizer', 'post_trigger_size');
+            obj.digitizer.sample_rate = h5readatt(obj.fname, ...
+               '/settings/digitizer', 'samplerate');
             obj.digitizer.samples = h5readatt(obj.fname, ...
-                ['/' obj.experimentname '/settings/digitizer'], 'samples');
+               '/settings/digitizer', 'samples');
         case 'spectrometer'
             obj.spectrometer.fiber = 'not implemented yet'; 
             obj.spectrometer.integration_time = h5readatt(obj.fname, ...
-                ['/' obj.experimentname '/settings/spectrometer'], 'integrationtime');
+                '/settings/spectrometer', 'integrationtime');
             obj.spectrometer.averageing = h5readatt(obj.fname, ...
-                ['/' obj.experimentname '/settings/spectrometer'], 'average_measurements');
-            obj.spectrometer.type = h5readatt(obj.fname, ...
-                ['/' obj.experimentname '/settings/spectrometer'], 'spectrometer');
+                '/settings/spectrometer', 'average_measurements');
+            obj.spectrometer.model = h5readatt(obj.fname, ...
+                 '/settings/spectrometer', 'spectrometer');
         case 'xystage' 
             obj.xystage.xnum = h5readatt(obj.fname, ...
-                ['/' obj.experimentname '/settings/xystage'], 'xnum');
+                 '/settings/xystage', 'xnum');
             obj.xystage.ynum = h5readatt(obj.fname, ...
-                ['/' obj.experimentname '/settings/xystage'], 'ynum');
+                 '/settings/xystage', 'ynum');
         case 'laser'
             obj.laser.wlnum = h5readatt(obj.fname, ...
-                ['/' obj.experimentname '/settings/laser'], 'wlnum');
+                 '/settings/laser', 'wlnum');
             obj.laser.energy_level = h5readatt(obj.fname, ...
-                ['/' obj.experimentname '/settings/laser'], 'energylevel');
+                '/settings/laser', 'energylevel');
+        case 'powermeter'
+            obj.powermeter.integration_time = h5readatt(obj.fname, ...
+                 '/settings/powermeter', 'integrationtime');
+            obj.powermeter.sensor = h5readatt(obj.fname, ...
+                 '/settings/powermeter', 'sensor');
+            obj.powermeter.sensor_calibration_date = h5readatt(obj.fname, ...
+                 '/settings/powermeter', 'sensor_calibration_date');
+            obj.powermeter.sensor_serial_number = h5readatt(obj.fname, ...
+                '/settings/powermeter', 'sensor_serial_number');  
     end
 end
 

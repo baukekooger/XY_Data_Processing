@@ -6,6 +6,8 @@ classdef XYEEPlot
         XYEEobj
         rgb
         xyl
+        picker 
+        plotwindow
     end
     
     methods
@@ -14,16 +16,16 @@ classdef XYEEPlot
             
             obj.XYEEobj = XYEEobj;
             
-            switch obj.XYEEobj.experiment
-                case 'ExcitationEmission'
+            switch 'transmission'
+                case 'excitation_emission'
                     if length(obj.XYEEobj.ex_wl)>1
                         obj = rgb_ex_process(obj);
                     else
                         obj = rgb_em_process(obj);
                     end
-                case 'Decay'
+                case 'decay'
                     obj = rgb_decay_process(obj);
-                case "transmission"
+                case 'transmission'
                     obj = rgb_transmission_process(obj);
             end
                         
@@ -46,8 +48,8 @@ classdef XYEEPlot
             end            
             
             if plotme
-                switch obj.XYEEobj.experiment
-                    case 'ExcitationEmission'
+                switch 'transmission'
+                    case 'excitation_emission'
                         if numel(obj.XYEEobj.xycoords)/2 == 1
                             obj = sspe_plot(obj);
                         elseif length(obj.XYEEobj.ex_wl)>1
@@ -57,14 +59,15 @@ classdef XYEEPlot
                         else
                             obj = rgb_em_plot(obj);
                         end
-                    case 'Decay'
+                    case 'decay'
                         if numel(obj.XYEEobj.xycoords/2) == 1
                             obj = sspd_plot(obj);
                         else
                             obj = rgb_decay_plot(obj);
                         end
                     case "transmission"
-                        obj = rgb_transmission_plot(obj, varargin);
+%                         obj = rgb_transmission_plot(obj, varargin);
+                          obj = testplot(obj); 
                 end
             end
         end
@@ -86,6 +89,7 @@ classdef XYEEPlot
         obj = sspd_process(obj);
         obj = rgb_decay_process(obj);
         obj = rgb_transmission_process(obj);
+        obj = testplot(obj); 
     end
     
 end

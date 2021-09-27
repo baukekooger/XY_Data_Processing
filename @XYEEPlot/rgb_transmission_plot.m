@@ -3,7 +3,7 @@ function [ obj ] = rgb_transmission_plot( obj, varargin )
 %   Detailed explanation goes here
 varargin = cellflat(varargin);
 % Process the necessary data
-spectrum = squeeze(obj.XYEEobj.spectrum);
+spectrum = squeeze(obj.XYEEobj.spectrometer.spectra);
 
 % Set up the windows
 datapicker = figure();
@@ -25,17 +25,17 @@ else
     rgb_plot = subplot(1,5,5);
 end
 
-x = squeeze(obj.XYEEobj.xycoords(:,1,1));
+x = squeeze(obj.XYEEobj.xystage.coordinates(:,1,1));
 if abs(sum(diff(x)))<0.01
-    x = squeeze(obj.XYEEobj.xycoords(1,:,1));
+    x = squeeze(obj.XYEEobj.xystage.coordinates(1,:,1));
 end
 
-y = squeeze(obj.XYEEobj.xycoords(1,:,2));
+y = squeeze(obj.XYEEobj.xystage.coordinates(1,:,2));
 if sum(isnan(y))
     y = linspace(y(1), diff(y(1:2))*(length(y)-1)+y(1), length(y));
 end
 if abs(sum(diff(y)))<0.01
-    y = squeeze(obj.XYEEobj.xycoords(:,1,2));
+    y = squeeze(obj.XYEEobj.xystage.coordinates(:,1,2));
 end
 
 xm = min(x);
@@ -157,7 +157,7 @@ set(datapicker_ax, 'YTick', 1:numel(y));
 set(datapicker_ax, 'XLim', [(1-0.5) (numel(x)+0.5)]);
 set(datapicker_ax, 'YLim', [(1-0.5) (numel(y)+0.5)]);
 
-    function flag=isMultipleCall()
+    function flag = isMultipleCall()
       flag = false; 
       % Get the stack
       s = dbstack();
@@ -181,7 +181,8 @@ set(datapicker_ax, 'YLim', [(1-0.5) (numel(y)+0.5)]);
 % ylimit = nanmax(ylimit(100:end-100))*1.5;
 ylimit = [0 1.1];
 % set(spectrum_plot, 'YLim', ylimit);
-set(spectrum_plot, 'XLim', [obj.XYEEobj.em_wl(1) obj.XYEEobj.em_wl(end)]);
+set(spectrum_plot, 'XLim', [obj.XYEEobj.spectrometer.wavelengths(1)...
+    obj.XYEEobj.spectrometer.wavelengths(end)]);
 
 % Reverse all x-directions
 set(datapicker_ax, 'XDir', 'reverse');
@@ -229,10 +230,10 @@ set(rgb_plot, 'XDir', 'reverse');
             pos = ci(ii).Position;
             
             if(withOffset)
-                plot(spectrum_plot, obj.XYEEobj.em_wl, ...
+                plot(spectrum_plot, obj.XYEEobj.spectrometer.wavelengths, ...
                     squeeze(spectrum(pos(1), pos(2), :)) + withOffset*(ii - 1) );
             else
-                plot(spectrum_plot, obj.XYEEobj.em_wl, ...
+                plot(spectrum_plot, obj.XYEEobj.spectrometer.wavelengths, ...
                     squeeze(spectrum(pos(1), pos(2), :)));
             end
             hold(spectrum_plot, 'on');

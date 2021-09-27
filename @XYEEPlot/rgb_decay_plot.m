@@ -1,6 +1,6 @@
 function [ obj ] = rgb_decay_plot( obj )
 
-spectrum = obj.XYEEobj.spectrum;
+spectrum = obj.XYEEobj.digitizer.spectra;
 
 % Redefine subplot
 % opt = {0.01, 0.01, 0.5};
@@ -17,8 +17,8 @@ figure(display);
 spectrum_plot = subplot(1,4,1:2);
 qy_plot = subplot(1,4,4);
 rgb_plot = subplot(1,4,3);
-x = squeeze(obj.XYEEobj.xycoords(:,1,1));
-y = squeeze(obj.XYEEobj.xycoords(1,:,2));
+x = squeeze(obj.XYEEobj.xystage.coordinates(:,1,1));
+y = squeeze(obj.XYEEobj.xystage.coordinates(1,:,2));
 
 % IMAGESC is defined as (y,x), so a permutation is in order.
 

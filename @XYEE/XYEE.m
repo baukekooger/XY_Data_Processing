@@ -232,20 +232,25 @@ classdef XYEE
     properties
         fname
         experiment
-        experimentname
-        experiments
         comment
+        sample
         substrate
         filter
+        beamsplitter = struct('model', 'n/a', 'calibration', 'n/a', ...
+            'wavelengths', 'n/a', 'calibration_date', 'n/a') 
         laser = struct('wlnum', 'n/a', 'excitation_wavelengths', [], ...
             'energy_level', 'n/a')
-        spectrometer = struct('type', 'n/a', 'integration_time', 'n/a', ...
+        spectrometer = struct('model', 'n/a', 'integration_time', 'n/a', ...
             'averageing', 'n/a', 'fiber', 'n/a', 'wavelengths', [], ...
-            'spectra', [], 'darkspectrum', [], 'lampspectrum', []) 
-        digitizer = struct('type', 'n/a', 'sample_period', 'n/a', ...
+            'spectra', [], 'darkspectrum', [], 'lampspectrum', [], ...
+            'efficiency', 'n/a')  
+        digitizer = struct('model', 'n/a', 'sample_rate', 'n/a', ...
             'samples', 'n/a', 'active_channels', [],...
-            'post_trigger_size', 'n/a', 'spectra', [])
-        powermeter = struct('sensor', 'n/a', 'integration_time', 'n/a') 
+            'post_trigger_size', 'n/a', 'spectra', [] , ...
+            'time', [])
+        powermeter = struct('power', 'n/a', 'time', [], 'sensor', 'n/a', ...
+            'integration_time', 'n/a', 'sensor_calibration_date', 'n/a',...
+            'sensor_serial_number', 'n/a') 
         pmt = struct('type', 'n/a', 'voltage', 'n/a')
         xystage = struct('type', [], 'coordinates', [], ...
             'xnum', 'n/a', 'ynum', 'n/a')
@@ -283,16 +288,17 @@ classdef XYEE
                 end
             end
             
-            obj = pick_experiment(obj); 
             obj = read_attributes(obj);  
-            
-            switch obj.experiment
+            experiment = obj.experiment{1}(1:end-1);
+            switch experiment
                 case 'excitation_emission'
                     obj = process_ee(obj);
                 case 'decay'
                     obj = process_decay(obj, varargin);
-                case "transmission"
+                case 'transmission'
+                    disp('transmission process started')
                     obj = process_transmission(obj, varargin);
+                    
             end
             
             if plotme
