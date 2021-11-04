@@ -1,4 +1,4 @@
-classdef XYEE
+classdef XYEE < handle
 %% XYEE Class
 % This class processes any XYEE measurement. 
 % It is devised to be context-sensitive, i.e. any measurement done with 
@@ -227,7 +227,6 @@ classdef XYEE
 %   film composition libraries," J. Lumin., vol. 208, pp. 51?56, Apr. 2019.
 %
 % CC-AT-BY 2016
-%
     
     properties
         fname
@@ -236,26 +235,37 @@ classdef XYEE
         sample
         substrate
         filter
-        beamsplitter = struct('model', 'n/a', 'calibration', 'n/a', ...
-            'wavelengths', 'n/a', 'calibration_date', 'n/a') 
-        laser = struct('wlnum', 'n/a', 'excitation_wavelengths', [], ...
-            'energy_level', 'n/a')
-        spectrometer = struct('model', 'n/a', 'integration_time', 'n/a', ...
-            'averageing', 'n/a', 'fiber', 'n/a', 'wavelengths', [], ...
+        beamsplitter = struct('model', [], 'correction_pm_to_sample',...
+            [], 'wavelengths', [], 'calibration_date', [], ... 
+             'power_pm', [], 'power_sample', [], 'times_pm', ...
+             [], 'times_sample', [])  
+        laser = struct('wlnum', [], 'excitation_wavelengths', [], ...
+            'energy_level', [])
+        spectrometer = struct('model', [], 'integration_time', [], ...
+            'averageing', [], 'fiber', [], 'wavelengths', [], ...
             'spectra', [], 'darkspectrum', [], 'lampspectrum', [], ...
-            'efficiency', 'n/a')  
-        digitizer = struct('model', 'n/a', 'sample_rate', 'n/a', ...
-            'samples', 'n/a', 'active_channels', [],...
-            'post_trigger_size', 'n/a', 'spectra', [] , ...
-            'time', [])
-        powermeter = struct('power', 'n/a', 'time', [], 'sensor', 'n/a', ...
-            'integration_time', 'n/a', 'sensor_calibration_date', 'n/a',...
-            'sensor_serial_number', 'n/a') 
-        pmt = struct('type', 'n/a', 'voltage', 'n/a')
+            'efficiency', [])  
+        digitizer = struct('model', [], 'sample_rate', [], ...
+            'samples', [], 'active_channels', [], ...
+            'post_trigger_size', [], 'spectra', [] , ...
+            'time', [], 'pulses', [], 'dc_offset', [], ...
+            'jitter_channel', [], 'jitter_correction', [], ...
+            'measurement_mode', [], 'single_photon_counting_treshold', ...
+            [], 'data_channel', [])
+        powermeter = struct('power', [], 'time', [], 'sensor', [], ...
+            'integration_time', [], 'sensor_calibration_date', [],...
+            'sensor_serial_number', [], 'flux_normalized', []) 
+        pmt = struct('type', [], 'voltage', [])
         xystage = struct('type', [], 'coordinates', [], ...
-            'xnum', 'n/a', 'ynum', 'n/a')
-        fitdata = {} 
-        
+            'xnum', [], 'ynum', [])
+        fitdata = struct
+        plotdata = struct('spectra_transmission', [], ...
+            'spectra_emission', [], 'spectra_excitation', [], ...
+            'spectra_decay', [], 'time_decay', [], 'rgb', [], ...
+            'xy_coordinates', [], 'xyl', []); 
+        datapicker 
+        datacursor = struct('xy', [], 'spectrum', [])
+        plotwindow =  struct('figure', [], 'ax_spectrum', [], 'ax_rgb', [])
     end
     
     methods
@@ -289,29 +299,46 @@ classdef XYEE
             end
             
             obj = read_attributes(obj);  
-            experiment = obj.experiment{1}(1:end-1);
-            switch experiment
+
+            switch obj.experiment
                 case 'excitation_emission'
-                    obj = process_ee(obj);
+                    disp('excitation emission process started')
+                    obj = read_excitation_emission(obj);
                 case 'decay'
-                    obj = process_decay(obj, varargin);
+                    obj = read_decay(obj);
                 case 'transmission'
                     disp('transmission process started')
-                    obj = process_transmission(obj, varargin);
-                    
+                    obj = read_transmission(obj);
             end
             
             if plotme
-                plot(obj);
+                obj = plot(obj);
             end
         end
     end
     
     % Public methods
     methods
-        function Plot = plot(obj, varargin)
-            Plot = XYEEPlot(obj, varargin);
+        function obj = plot(obj, varargin)
+           switch obj.experiment
+               case 'transmission'
+                   if isempty(obj.plotdata.rgb)
+                        obj = rgb_transmission_process(obj); 
+                   end
+                   obj = rgb_transmission_plot(obj); 
+               case 'excitation_emission'
+                   if isempty(obj.plotdata.spectra_emission)
+                        obj = set_spectra_excitation_emission(obj);
+                   end
+                   obj = plot_excitation_emission(obj);  
+               case 'decay'
+                   if isempty(obj.plotdata.spectra_decay)
+                       obj = set_spectra_decay(obj); 
+                   end
+                   obj = plot_decay(obj); 
+           end
         end
+        
         function obj = fit(obj, varargin)
             switch obj.experiment
                 case 'excitation_emission'
@@ -328,8 +355,7 @@ classdef XYEE
     methods %(Access=protected)
         obj=pick_experiment(obj)
         obj=read_attributes(obj) 
-        obj=process_ee(obj);
-        obj=process_decay(obj, varargin);
+        obj=read_decay(obj, varargin);
         obj=process_transmission(obj, varargin);
         obj=fit_ee(obj, varargin);
         obj=fit_decay(obj, varargin);
@@ -339,9 +365,17 @@ classdef XYEE
         obj=fit_transmission4(obj, varargin);
         obj=fit_transmission5(obj, varargin);
         obj=fit_transmission_fixed_n(obj, varargin);
-        
-        obj=normalize(obj, varargin);
-        
+        obj=rgb_transmission_process(obj)
+        obj=set_spectra_excitation_emission(obj, varargin);
+        obj=read_excitation_emission(obj, varargin); 
+        obj=read_transmission(obj)
+        obj=plot_excitation_emission(obj)
+        obj = plot_decay(obj); 
+        obj = set_rgb_excitation_emission(obj);
+        obj = normalize(obj, varargin);
+        obj = set_spectra_decay(obj); 
+        obj = printtest(obj)
+
         d = thickness(obj, varargin);
         k = extinction_coefficient(obj, varargin);
         n = index_of_refraction(obj, varargin);
