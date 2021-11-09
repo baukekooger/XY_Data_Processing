@@ -6,26 +6,27 @@ function passed = check_time_range_limits(obj, src, event)
 % plotwindow 
 
 % check if source is spinner or datacursor (hggroup)
-switch src.Type
-    case 'uispinner' 
-        passed = check_limits_uispinner(obj, src, event); 
-    case 'hggroup' 
-        passed = check_limits_datacursor(obj, src, event); 
-    otherwise 
-        error('source for checking time range limits unknown')
-end            
+    switch src.Type
+        case 'uispinner' 
+            passed = check_limits_uispinner(obj, src, event); 
+        case 'hggroup' 
+            passed = check_limits_datacursor(obj, src, event); 
+        otherwise 
+            error('source for checking time range limits unknown')
+    end            
+
 end
 
 function passed = check_limits_uispinner(obj, src, event)
-% check if stop value is lower than start value
-disp('called function check limits uispinner')
-start = obj.datapicker.StartTimeSpinner.Value;
-stop = obj.datapicker.StopTimeSpinner.Value;
+
+    % check if stop value is lower than start value
+    start = obj.datapicker.StartTimeSpinner.Value;
+    stop = obj.datapicker.StopTimeSpinner.Value;
     if start < stop
         passed = true; 
         return
     end
-% set spinner to previous value if stop lower than start
+    % set spinner to previous value if stop lower than start
     if strcmp(src.Tag, 'StartTimeSpinner')
         obj.datapicker.StartTimeSpinner.Value = event.PreviousValue; 
     elseif strcmp(src.Tag, 'StopTimeSpinner') 
@@ -34,7 +35,7 @@ stop = obj.datapicker.StopTimeSpinner.Value;
         error(['source tag not equal to starttimespinner or ' ...
             'stoptimespinner'])
     end
-passed = false; 
+    passed = false; 
 end
 
 

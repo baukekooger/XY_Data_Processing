@@ -258,13 +258,14 @@ classdef XYEE < handle
         pmt = struct('type', [], 'voltage', [])
         xystage = struct('type', [], 'coordinates', [], ...
             'xnum', [], 'ynum', [])
-        fitdata = struct
+        fitdata = struct('fitobjects', [], 'goodnesses', [], ...,
+            'outputs', [], 'fitoptions', [], 'fittype', [])  
         plotdata = struct('spectra_transmission', [], ...
             'spectra_emission', [], 'spectra_excitation', [], ...
             'spectra_decay', [], 'time_decay', [], 'rgb', [], ...
             'xy_coordinates', [], 'xyl', []); 
         datapicker 
-        datacursor = struct('xy', [], 'spectrum', [])
+        datacursor = struct('xy', [], 'plotwindow', [])
         plotwindow =  struct('figure', [], 'ax_spectrum', [], 'ax_rgb', [])
     end
     
