@@ -22,8 +22,7 @@ function plot_cursor_selection_decay(obj)
     
     % Load color and marker settings such that always the same order is
     % used when redrawing data. 
-    colors_markers = load(['C:\Users\bauke\Repositories\' ...
-        'XYEE_Data_Processing\colors_markers.mat']); 
+    colors_markers = load('colors_markers.mat'); 
     
     % Perform the plots 
     plot_spectra_decay(obj, cursor_info, colors_markers);
