@@ -14,7 +14,7 @@ obj.plotwindow.ax_spectrum = subplot(1,5, [1 4]);
 obj.plotwindow.ax_rgb = subplot(1,5,5);
 
 
-%% setup the limit and step values of the ui data selection spinner. 
+%% initialize the ui components
 % set the limit for the stop spinner at the maximum value
 upperlimit = double(obj.digitizer.samples-1) / ... 
     double(obj.digitizer.sample_rate); 
@@ -27,6 +27,13 @@ obj.datapicker.StopTimeSpinner.Value = upperlimit;
 % set the excitation wavelengths selection 
 obj.datapicker.ExcitationWavelengthListBox.Items = ...
     string(obj.laser.excitation_wavelengths); 
+
+% set the default colour chart option and disable the dropdown.
+obj.datapicker.ColourchartplottypeDropDown.Items = {'default'}; 
+obj.datapicker.ColourchartplottypeDropDown.Enable = 'off'; 
+
+% set the possible compression factors 
+set_compression_factors(obj) 
 
 % connect the ui activity to callback functions
 %% - data cursors
@@ -59,6 +66,10 @@ obj.datapicker.FitAllButton.ButtonPushedFcn = ...
     @(src, event)fit_all_decay(obj); 
 obj.datapicker.ScaleYAxisDropDown.ValueChangedFcn = ...
     @(src, event)change_scale_y_axis(obj, event);  
+obj.datapicker.DataCompressionDropDown.ValueChangedFcn = ...
+    @(src, event)wrapper_normalize_selection(obj); 
+obj.datapicker.ColourchartplottypeDropDown.ValueChangedFcn = ...
+    @(src, event)plottype_changed(obj)
 
 %% call the plot rgb function to plot an initial XY color chart 
 rgb_decay_set(obj);
@@ -103,7 +114,7 @@ fittype_changed_decay(obj);
         rgb_decay_plot(obj);
         plot_cursor_selection_decay(obj);
     end
-    
+
     function excitation_wavelength_changed(varargin) 
         % Set the spectra to the newly selected excitation wavelength
         set_spectra_decay(obj);
@@ -111,6 +122,12 @@ fittype_changed_decay(obj);
         rgb_decay_set(obj);
         rgb_decay_plot(obj);
         plot_cursor_selection_decay(obj);
+    end
+
+    function plottype_changed()
+       rgb_decay_set(obj) 
+       rgb_decay_plot(obj)
+       plot_cursor_selection_decay(obj)
     end
 
     function time_range_changed_spinner(src, event)

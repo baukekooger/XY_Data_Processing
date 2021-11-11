@@ -2,10 +2,21 @@ function reset_spectra_decay(obj)
 % reset the spectra to the full time range with the current wavelength 
 % selection 
 
+    % reset datacompression drop down
+    obj.datapicker.DataCompressionDropDown.Value = "none"; 
+
     % reset the starttime and stoptime spinners to their initial values
-    upperlimit = double(obj.digitizer.samples-1) / ... 
-        double(obj.digitizer.sample_rate); 
+    sample_rate = double(obj.digitizer.sample_rate);
+    samples = double(obj.digitizer.samples); 
+
+    step = 1 / sample_rate; 
+    upperlimit = (samples-1) / sample_rate; 
+
+    obj.datapicker.StartTimeSpinner.Limits = [0 upperlimit];
+    obj.datapicker.StartTimeSpinner.Step = step; 
     obj.datapicker.StartTimeSpinner.Value = 0; 
+    obj.datapicker.StopTimeSpinner.Limits = [0 upperlimit];
+    obj.datapicker.StopTimeSpinner.Step = step;
     obj.datapicker.StopTimeSpinner.Value = upperlimit; 
     
     % get the selected excitation wavelength(s) 
@@ -17,4 +28,3 @@ function reset_spectra_decay(obj)
     obj.plotdata.time_decay = obj.digitizer.time;
 
 end
-

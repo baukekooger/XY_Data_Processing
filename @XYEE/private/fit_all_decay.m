@@ -3,6 +3,7 @@ function fit_all_decay(obj)
 % possibly lengthy procedure, so disable ui components and launch
 % progressbar
 % enable everything when fitting is complete 
+% make the plotoptions and enable plotoptions when all is fitted. 
     
     progressbar('Fitting');
     enable_gui(obj, 'off') 
@@ -32,6 +33,7 @@ function fit_all_decay(obj)
     end 
     
     enable_gui(obj, 'on') 
+    set_plotmethods_fitted_data(obj)
 
 end
 

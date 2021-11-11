@@ -24,9 +24,6 @@ function plot_cursor_selection_decay(obj)
     % used when redrawing data. 
     colors_markers = load('colors_markers.mat'); 
     
-    % adding a comment
-   
-
     % Perform the plots 
     plot_spectra_decay(obj, cursor_info, colors_markers);
     plot_position_indicators(obj, cursor_info, colors_markers);
