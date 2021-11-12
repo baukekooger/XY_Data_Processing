@@ -1,4 +1,4 @@
-function fittype_changed_decay(obj)
+function set_fittype_decay(obj)
 % set the fitdata.fittype attribute to the corresponding library 
 % curve name.
 % update the expression shown in the gui. 
@@ -15,7 +15,4 @@ function fittype_changed_decay(obj)
                 '$y = a^{bt} + c^{dt}'; 
     end
     
-    reset_fitdata(obj); 
-    plot_cursor_selection_decay(obj)
-
 end
