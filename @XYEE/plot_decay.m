@@ -28,9 +28,9 @@ obj.datapicker.StopTimeSpinner.Value = upperlimit;
 obj.datapicker.ExcitationWavelengthListBox.Items = ...
     string(obj.laser.excitation_wavelengths); 
 
-% set the default colour chart option and disable the dropdown.
-obj.datapicker.ColourchartplottypeDropDown.Items = {'default'}; 
-obj.datapicker.ColourchartplottypeDropDown.Enable = 'off'; 
+% set the default color chart option and disable the dropdown.
+obj.datapicker.ColorChartPlotTypeDropDown.Items = {'default'}; 
+obj.datapicker.ColorChartPlotTypeDropDown.Enable = 'off'; 
 
 % set the possible compression factors 
 set_compression_factors(obj) 
@@ -68,8 +68,12 @@ obj.datapicker.ScaleYAxisDropDown.ValueChangedFcn = ...
     @(src, event)change_scale_y_axis(obj, event);  
 obj.datapicker.DataCompressionDropDown.ValueChangedFcn = ...
     @(src, event)wrapper_normalize_selection(obj); 
-obj.datapicker.ColourchartplottypeDropDown.ValueChangedFcn = ...
-    @(src, event)plottype_changed(obj)
+obj.datapicker.ColorChartPlotTypeDropDown.ValueChangedFcn = ...
+    @(src, event)plottype_changed(obj);
+obj.datapicker.ColorMinEditField.ValueChangedFcn = ...
+    @color_limits_changed; 
+obj.datapicker.ColorMaxEditField.ValueChangedFcn = ...
+    @color_limits_changed; 
 
 %% call the plot rgb function to plot an initial XY color chart 
 rgb_decay_set(obj);
@@ -100,7 +104,8 @@ fittype_changed_decay(obj);
     function wrapper_reset(varargin) 
         % Reset the selected time range
         reset_spectra_decay(obj);
-        reset_fitdata(obj)
+        reset_fitdata(obj);
+        set_plotmethods_fitted_data(obj);
         rgb_decay_set(obj); 
         rgb_decay_plot(obj);
         plot_cursor_selection_decay(obj);
@@ -109,7 +114,8 @@ fittype_changed_decay(obj);
     function wrapper_normalize_selection(varargin)
         % Normalize the traces to the maximum value in selected time range 
         set_spectra_decay(obj);
-        reset_fitdata(obj)
+        reset_fitdata(obj);
+        set_plotmethods_fitted_data(obj);
         rgb_decay_set(obj);
         rgb_decay_plot(obj);
         plot_cursor_selection_decay(obj);
@@ -118,16 +124,17 @@ fittype_changed_decay(obj);
     function excitation_wavelength_changed(varargin) 
         % Set the spectra to the newly selected excitation wavelength
         set_spectra_decay(obj);
-        reset_fitdata(obj)
+        reset_fitdata(obj);
+        set_plotmethods_fitted_data(obj);
         rgb_decay_set(obj);
         rgb_decay_plot(obj);
         plot_cursor_selection_decay(obj);
     end
 
-    function plottype_changed()
-       rgb_decay_set(obj) 
-       rgb_decay_plot(obj)
-       plot_cursor_selection_decay(obj)
+    function plottype_changed(obj)
+       rgb_decay_set(obj) ;
+       rgb_decay_plot(obj);
+       plot_cursor_selection_decay(obj);
     end
 
     function time_range_changed_spinner(src, event)
@@ -136,6 +143,23 @@ fittype_changed_decay(obj);
             return
         end
         draw_time_limit_lines(obj);
+    end
+
+    function color_limits_changed(src, event)
+        % check if the min limit is not higher than the max limit
+        if not(check_color_limits(obj, src, event))
+            return
+        end  
+        update_color_limits(obj) 
+    end
+
+    function fittype_changed_decay(obj)
+        set_fittype_decay(obj)
+        reset_fitdata(obj); 
+        set_plotmethods_fitted_data(obj);
+        rgb_decay_set(obj);
+        rgb_decay_plot(obj);
+        plot_cursor_selection_decay(obj)
     end
 
 end

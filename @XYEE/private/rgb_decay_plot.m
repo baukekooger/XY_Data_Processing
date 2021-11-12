@@ -41,6 +41,15 @@ if isempty(colorsurface)
 else
     colorsurface.CData = flipud(obj.plotdata.rgb);  
 end
+colorbar(obj.datapicker.UIAxes)
+% Set limits in the colorplot limits editfields. 
+mincolor = min(colorsurface.CData, [], "all"); 
+maxcolor = max(colorsurface.CData, [], "all"); 
+obj.datapicker.ColorMinEditField.Limits = [mincolor, maxcolor]; 
+obj.datapicker.ColorMaxEditField.Limits = [mincolor, maxcolor]; 
+obj.datapicker.ColorMinEditField.Value = mincolor; 
+obj.datapicker.ColorMaxEditField.Value = maxcolor; 
+
 
 % Plot the measurement points if none are available
 if isempty(findobj(obj.datapicker.UIAxes, 'Type', 'Line'))
