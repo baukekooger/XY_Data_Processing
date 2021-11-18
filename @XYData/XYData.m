@@ -1,4 +1,4 @@
-classdef XYEE < handle
+classdef XYData < handle
 %% XYEE Class
 % This class processes any XYEE measurement. 
 % It is devised to be context-sensitive, i.e. any measurement done with 
@@ -271,14 +271,14 @@ classdef XYEE < handle
     
     methods
         % Constructor
-        function obj=XYEE(varargin)
+        function obj=XYData(varargin)
             varargin = cellflat(varargin);
             N = nargin;
             if ~N
                 return
             end
             
-            % Copy the XYEE object if given in the first argument
+            % Copy the XYData object if given in the first argument
             k=1;
             if isa(varargin{k}, class(obj)) && k==1
                 obj = varargin{k};
