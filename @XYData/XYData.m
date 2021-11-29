@@ -234,7 +234,8 @@ classdef XYData < handle
         comment
         sample
         substrate
-        filter
+        filters = struct('neutral_density', [], 'longpass', [], ...
+            'bandpass', [])
         beamsplitter = struct('model', [], 'correction_pm_to_sample',...
             [], 'wavelengths', [], 'calibration_date', [], ... 
              'power_pm', [], 'power_sample', [], 'times_pm', ...
@@ -258,10 +259,16 @@ classdef XYData < handle
         pmt = struct('type', [], 'voltage', [])
         xystage = struct('type', [], 'coordinates', [], ...
             'xnum', [], 'ynum', [])
-        fitdata = struct('fitobjects', [], 'goodnesses', [], ...,
-            'outputs', [], 'fitoptions', [], 'fittype', [])  
+        fitdata = struct('fitobjects', [], 'goodnesses', [], ...
+            'outputs', [], 'fitoptions', [], 'fittype', [], ...
+            'optifit_fname', [])  
         plotdata = struct('spectra_transmission', [], ...
-            'spectra_emission', [], 'spectra_excitation', [], ...
+            'wavelengths_transmission', [], ...
+            'darkspectrum_transmission', [], ...
+            'lampspectrum_transmission', [], ...
+            'spectra_emission', [], 'wavelengths_emission', [], ...
+            'spectra_excitation', [], 'wavelengths_excitation', [], ...
+            'darkspectrum_emission', [], ...
             'spectra_decay', [], 'time_decay', [], 'rgb', [], ...
             'xy_coordinates', [], 'xyl', []); 
         datapicker 
@@ -299,94 +306,47 @@ classdef XYData < handle
                 end
             end
             
-            obj = read_attributes(obj);  
+            read_attributes(obj);  
 
             switch obj.experiment
                 case 'excitation_emission'
-                    disp('excitation emission process started')
-                    obj = read_excitation_emission(obj);
+                    read_excitation_emission(obj);
                 case 'decay'
-                    obj = read_decay(obj);
+                    read_decay(obj);
                 case 'transmission'
-                    disp('transmission process started')
-                    obj = read_transmission(obj);
+                    read_transmission(obj);
             end
             
             if plotme
-                obj = plot(obj);
+                plot(obj);
             end
         end
     end
     
-    % Public methods
-    methods
-        function obj = plot(obj, varargin)
+    % Only one public method, plot. All other methods are in the private
+    % folder to prevent calling methods from outside of ui and to prevent 
+    % a long list of private methods. 
+    
+    methods (Access=public)
+        function plot(obj, varargin)
            switch obj.experiment
                case 'transmission'
-                   if isempty(obj.plotdata.rgb)
-                        obj = rgb_transmission_process(obj); 
+                   if isempty(obj.plotdata.spectra_transmission)
+                       set_spectra_transmission(obj);
                    end
-                   obj = rgb_transmission_plot(obj); 
+                   plot_transmission(obj); 
                case 'excitation_emission'
                    if isempty(obj.plotdata.spectra_emission)
-                        obj = set_spectra_excitation_emission(obj);
+                       set_spectra_excitation_emission(obj);
                    end
-                   obj = plot_excitation_emission(obj);  
+                   plot_excitation_emission(obj);  
                case 'decay'
                    if isempty(obj.plotdata.spectra_decay)
-                       obj = set_spectra_decay(obj); 
+                       set_spectra_decay(obj); 
                    end
-                   obj = plot_decay(obj); 
+                   plot_decay(obj); 
            end
         end
-        
-        function obj = fit(obj, varargin)
-            switch obj.experiment
-                case 'excitation_emission'
-                    obj = fit_ee(obj, varargin);
-                case 'decay'
-                    obj = fit_decay(obj, varargin);
-                case "transmission" 
-                    obj = fit_transmission5(obj, varargin);
-            end
-        end
-    end
-    
-    % Private methods
-    methods %(Access=protected)
-        obj=pick_experiment(obj)
-        obj=read_attributes(obj) 
-        obj=read_decay(obj, varargin);
-        obj=process_transmission(obj, varargin);
-        obj=fit_ee(obj, varargin);
-        obj=fit_decay(obj, varargin);
-        obj=fit_transmission(obj, varargin);
-        obj=fit_transmission2(obj, varargin);
-        obj=fit_transmission3(obj, varargin);
-        obj=fit_transmission4(obj, varargin);
-        obj=fit_transmission5(obj, varargin);
-        obj=fit_transmission_fixed_n(obj, varargin);
-        obj=rgb_transmission_process(obj)
-        obj=set_spectra_excitation_emission(obj, varargin);
-        obj=read_excitation_emission(obj, varargin); 
-        obj=read_transmission(obj)
-        obj=plot_excitation_emission(obj)
-        obj = plot_decay(obj); 
-        obj = set_rgb_excitation_emission(obj);
-        obj = normalize(obj, varargin);
-        obj = set_spectra_decay(obj); 
-        obj = printtest(obj)
-
-        d = thickness(obj, varargin);
-        k = extinction_coefficient(obj, varargin);
-        n = index_of_refraction(obj, varargin);
-        rsq = rsquare(obj, varargin);
-        
-        % Auxillerary plotting functions
-        fit_ee_overview(obj);
-        
-        % Exporting options
-        export_for_optifit(obj, x, y, varargin);
     end
     
 end
