@@ -32,8 +32,10 @@ function plot_beamsplitter_calibration(obj)
     minwl = obj.beamsplitter.wavelengths(1); 
     maxwl = obj.beamsplitter.wavelengths(end); 
     xlim(obj.plotwindow.ax_spectrum, [minwl, maxwl])
-    xlabel('Wavelength [nm]')
-    obj.plotwindow.ax_spectrum.Title.String = 'Beamsplitter Calibration'; 
+    xlabel(obj.plotwindow.ax_spectrum, 'Wavelength [nm]')
+    obj.plotwindow.ax_spectrum.Title.String = ['Beamsplitter ', ...
+        'Calibration, Model = ', obj.beamsplitter.model, ', Cal. Date = ', ...
+        obj.beamsplitter.calibration_date];
     
 end
 

@@ -42,11 +42,14 @@ else
     colorsurface.CData = flipud(obj.plotdata.rgb);  
 end
 colorbar(obj.datapicker.UIAxes)
-% Set limits in the colorplot limits editfields. 
+
+% Set limits in the colorplot and also in the edit fields
 mincolor = min(colorsurface.CData, [], "all"); 
 maxcolor = max(colorsurface.CData, [], "all"); 
-obj.datapicker.ColorMinEditField.Limits = [mincolor, maxcolor]; 
-obj.datapicker.ColorMaxEditField.Limits = [mincolor, maxcolor]; 
+caxis(obj.datapicker.UIAxes, [mincolor maxcolor]); 
+colorbar(obj.datapicker.UIAxes)
+%     obj.datapicker.ColorMinEditField.Limits = [mincolor, maxcolor]; 
+%     obj.datapicker.ColorMaxEditField.Limits = [mincolor, maxcolor]; 
 obj.datapicker.ColorMinEditField.Value = mincolor; 
 obj.datapicker.ColorMaxEditField.Value = maxcolor; 
 

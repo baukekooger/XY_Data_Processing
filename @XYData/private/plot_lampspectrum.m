@@ -4,7 +4,7 @@ function plot_lampspectrum(obj)
     delete(findobj(obj.plotwindow.ax_spectrum, 'Type', 'Line'))    
     plot(obj.plotwindow.ax_spectrum, ...
         obj.plotdata.wavelengths_transmission, ...
-        obj.plotdata.lampspectrum)
+        obj.plotdata.lampspectrum_transmission)
     title(obj.plotwindow.ax_spectrum, 'Lamp Spectrum Minus Dark Spectrum') 
     ylabel(obj.plotwindow.ax_spectrum, 'Counts')
     ylim(obj.plotwindow.ax_spectrum, [-Inf, Inf])

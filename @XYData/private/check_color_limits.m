@@ -8,9 +8,9 @@ function passed = check_color_limits(obj, src, event)
         return
     end
     % set edit field to previous value if max lower than min
-    if strcmp(src.Tag, 'MinEdit')
+    if src == obj.datapicker.ColorMinEditField
         obj.datapicker.ColorMinEditField.Value = event.PreviousValue; 
-    elseif strcmp(src.Tag, 'MaxEdit') 
+    elseif src == obj.datapicker.ColorMaxEditField
         obj.datapicker.ColorMaxEditField.Value = event.PreviousValue; 
     else
         error(['source tag not equal to starttimespinner or ' ...

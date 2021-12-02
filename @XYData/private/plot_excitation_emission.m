@@ -25,9 +25,10 @@ function plot_excitation_emission(obj)
     obj.datapicker.MaxWavelengthSpinner.Step = step; 
     obj.datapicker.MaxWavelengthSpinner.Value = max_wl;  
 
-    obj.datapicker.EmissionWavelengthSpinner.Limits = [min_wl, max_wl]; 
-    obj.datapicker.EmissionWavelengthSpinner.Step = step; 
-    obj.datapicker.EmissionWavelengthSpinner.Value = max_wl;  
+    obj.datapicker.EmissionPeakSpinner.Limits = [min_wl, max_wl]; 
+    obj.datapicker.EmissionPeakSpinner.Step = step; 
+    startpeak = obj.spectrometer.wavelengths(ceil(end/2)); 
+    obj.datapicker.EmissionPeakSpinner.Value = startpeak;  
     
     % init the excitation wavelength spinners  
     min_ex_wl = min(obj.laser.excitation_wavelengths);
@@ -61,22 +62,47 @@ function plot_excitation_emission(obj)
         @(src, event)wrapper_cursor_clicked_plotwindow(event, obj);
        
     %% connect ui elements 
+    obj.datapicker.SpectraDropDown.ValueChangedFcn = ...
+        @(src, event)spectra_changed(obj, event);
+    obj.datapicker.CorrectionDropDown.ValueChangedFcn = ...
+        @(src, event)set_spectra(obj);
     obj.datapicker.SetSpectraButton.ButtonPushedFcn = ...
         @(src, event)set_spectra(obj);
     obj.datapicker.MinWavelengthSpinner.ValueChangedFcn = ...
-        @(src, event)wavelength_range_changed_spinner(obj, src, event); 
+        @(src, event)range_changed_spinner(obj, src, event); 
     obj.datapicker.MaxWavelengthSpinner.ValueChangedFcn = ...
-        @(src, event)wavelength_range_changed_spinner(obj, src, event); 
+        @(src, event)range_changed_spinner(obj, src, event); 
+    obj.datapicker.MinExWavelengthSpinner.ValueChangedFcn = ...
+        @(src, event)range_changed_spinner(obj, src, event); 
+    obj.datapicker.MaxExWavelengthSpinner.ValueChangedFcn = ...
+        @(src, event)range_changed_spinner(obj, src, event); 
+    obj.datapicker.EmissionPeakSpinner.ValueChangedFcn = ...
+        @(src, event)range_changed_spinner(obj, src, event); 
+    obj.datapicker.PeakWidthSpinner.ValueChangedFcn = ...
+        @(src, event)range_changed_spinner(obj, src, event); 
     obj.datapicker.ClickMinWavelengthCheckBox.ValueChangedFcn = ...
         @(src, event)assert_checkboxes_wavelength(obj, src); 
     obj.datapicker.ClickMaxWavelengthCheckBox.ValueChangedFcn = ...
         @(src, event)assert_checkboxes_wavelength(obj, src); 
-    obj.datapicker.ResetRangeButton.ButtonPushedFcn = ...
+    obj.datapicker.ClickMinExWavelengthCheckBox.ValueChangedFcn = ...
+        @(src, event)assert_checkboxes_wavelength(obj, src); 
+    obj.datapicker.ClickMaxExWavelengthCheckBox.ValueChangedFcn = ...
+        @(src, event)assert_checkboxes_wavelength(obj, src); 
+    obj.datapicker.ResetRangesButton.ButtonPushedFcn = ...
         @(src, event)reset_wavelength_range(obj); 
-     obj.datapicker.DarkSpectrumButton.ButtonPushedFcn = ...
+    obj.datapicker.PlotDarkSpectrumButton.ButtonPushedFcn = ...
         @(src, event)plot_darkspectrum(obj); 
-     obj.datapicker.BeamsplitterCalibrationButton.ButtonPushedFcn = ...
+    obj.datapicker.PlotBeamsplitterCalibrationButton.ButtonPushedFcn = ...
         @(src, event)plot_beamsplitter_calibration(obj); 
+    obj.datapicker.ColorMinEditField.ValueChangedFcn = ...
+        @(src, event)color_limits_changed(obj, src, event); 
+    obj.datapicker.ColorMaxEditField.ValueChangedFcn = ...
+        @(src, event)color_limits_changed(obj, src, event); 
+    obj.datapicker.ResetLimitsButton.ButtonPushedFcn = ...
+        @(src, event)plot_rgb_excitation_emission(obj); 
+    obj.datapicker.SelectBeamsplitterButton.ButtonPushedFcn = ...
+        @(src, event)select_beamsplitter(obj); 
+        
 
 
     %% call the rgb function to plot an initial XY color chart
@@ -97,15 +123,20 @@ function plot_excitation_emission(obj)
         wrapper_cursor_clicked_plotwindow(event, obj) 
         % Set the plotwindow cursor datatip value and set the wavelength
         % of corresponding spinner if check is passed. 
-        wl = event.Position(1);
-        if not(check_range_wavelength_cursor(obj))
-            datatip_text_plotwindow = ['Minimum wavelength should be ' ...
-                'smaller than maximum wavelength']; 
+        [datatip_text_plotwindow, passed, src] = ...
+            check_range_wavelength_cursor_excitation_emission(obj, event);
+        if not(passed)
             return
         end
-        datatip_text_plotwindow = sprintf('wavelength = %.2f', wl); 
-        select_nearest_wavelength(obj)
-        draw_lines_wavelength_range(obj);
+        select_nearest_wavelength(obj, src)
+        draw_lines_wavelength_range(obj, src);
+    end
+
+    function spectra_changed(obj, event)
+        % Set the correction options, these are different for when power is
+        % selected. 
+        set_correction_options(obj, event); 
+        set_spectra(obj); 
     end
 
     function set_spectra(obj)
@@ -117,17 +148,31 @@ function plot_excitation_emission(obj)
         plot_cursor_selection_excitation_emission(obj);
     end
 
-    function wavelength_range_changed_spinner(obj, src, event)
-        if not(check_range_wavelength_spinner(obj, src, event))
+    function range_changed_spinner(obj, src, event)
+        if not(check_range_spinner(obj, src, event))
             return
         end
-        select_nearest_wavelength(obj) 
-        draw_lines_wavelength_range(obj)
+        select_nearest_wavelength(obj, src) 
+        draw_lines_wavelength_range(obj, src)
     end
 
     function reset_wavelength_range(obj)
         reset_wavelengths(obj)
         set_spectra(obj) 
+    end
+
+    function color_limits_changed(obj, src, event)
+        % check if the min limit is not higher than the max limit
+        if not(check_color_limits(obj, src, event))
+            return
+        end  
+        update_color_limits(obj) 
+    end
+
+    function select_beamsplitter(obj)
+        filename = uigetfile('*.csv', ['Select a beamsplitter ...' ...
+            'calibration file']);
+        read_calibration_beamsplitter_csv(obj, filename); 
     end
 
 end

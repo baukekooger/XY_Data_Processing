@@ -16,18 +16,23 @@ function set_spectra_excitation_emission(obj)
             obj.xystage.xnum, 1);
     else
         spectratype = obj.datapicker.SpectraDropDown.Value; 
-        correctiontype = obj.datapicker.CorrectionDropDown.Value;
+        correctiontype = obj.datapicker.CorrectionDropDown.Value;   
+        if not(isempty(obj.plotwindow.ax_spectrum.Legend))
+            delete(obj.plotwindow.ax_spectrum.Legend)
+        end
     end
     
     % delete the wavelength range lines from the plot.
     delete(findobj(obj.plotwindow.ax_spectrum, 'Type', 'ConstantLine'))
-
+    
     % Pick the type of spectrum to be set.
     switch spectratype
         case 'Emission'
             set_spectra_emission(obj, correctiontype)
         case 'Excitation'
             set_spectra_excitation(obj, correctiontype)
+        case 'Power' 
+            set_spectra_power(obj, correctiontype) 
     end
 end
 
@@ -41,10 +46,12 @@ function set_spectra_emission(obj, correctiontype)
         idx_maxwl = length(obj.spectrometer.wavelengths);
         idx_ex_wls = 1; 
     else
-        minwl = obj.datapicker.MinWavelengthSpinner.Value; 
-        maxwl = obj.datapicker.MaxWavelengthSpinner.Value; 
-        idx_minwl = find(obj.spectrometer.wavelengths == minwl);
-        idx_maxwl = find(obj.spectrometer.wavelengths == maxwl); 
+        minwl_selected = obj.datapicker.MinWavelengthSpinner.Value; 
+        maxwl_selected = obj.datapicker.MaxWavelengthSpinner.Value; 
+        [~, idx_minwl] = select_nearest(...
+            obj.spectrometer.wavelengths, minwl_selected);
+        [~, idx_maxwl] = select_nearest(...
+            obj.spectrometer.wavelengths, maxwl_selected); 
 
         ex_wl_selection = ...
             obj.datapicker.ExcitationWavelengthsListBox.Value;
@@ -96,6 +103,95 @@ function set_spectra_emission(obj, correctiontype)
     end
 end
 
+function set_spectra_excitation(obj, correctiontype) 
+% Calculate the excitation spectra by summing the selected emission range
+% for all the excitation wavelengths. Apply correction according to the
+% selected option. 
+    emissionpeak = obj.datapicker.EmissionPeakSpinner.Value; 
+    peakwidth = obj.datapicker.PeakWidthSpinner.Value; 
+    wls = obj.spectrometer.wavelengths; 
+    [~, idx_minwl] = select_nearest(wls, emissionpeak-0.5*peakwidth); 
+    [~, idx_maxwl] = select_nearest(wls, emissionpeak+0.5*peakwidth); 
+    
+    excitation_min = obj.datapicker.MinExWavelengthSpinner.Value; 
+    excitation_max = obj.datapicker.MaxExWavelengthSpinner.Value; 
+    exwls = obj.laser.excitation_wavelengths; 
+
+    [~, idx_minexwl] = select_nearest(exwls, excitation_min); 
+    [~, idx_maxexwl] = select_nearest(exwls, excitation_max); 
+
+    obj.plotdata.wavelengths_excitation = ...
+        obj.laser.excitation_wavelengths(idx_minexwl:idx_maxexwl); 
+    switch correctiontype
+        case 'No Correction'
+            obj.plotdata.spectra_excitation = ...
+                sum(obj.spectrometer.spectra(:, :, ...
+                idx_minexwl:idx_maxexwl, idx_minwl:idx_maxwl), 4); 
+        case 'Dark Spectrum'
+            darkrepeat = repeatdark(obj, idx_minwl, idx_maxwl, ...
+                idx_minexwl:idx_maxexwl);
+            spectra_corrected = obj.spectrometer.spectra(:, :, ...
+                idx_minexwl:idx_maxexwl, idx_minwl:idx_maxwl) - darkrepeat; 
+            obj.plotdata.spectra_excitation = sum(spectra_corrected, 4); 
+        case 'Dark Spectrum, Power' 
+            darkrepeat = repeatdark(obj, idx_minwl, idx_maxwl, ...
+                idx_minexwl:idx_maxexwl);
+            fluxrepeat = repeatflux(obj, idx_minexwl:idx_maxexwl, false);
+            spectra_corrected = obj.spectrometer.spectra(:, :, ...
+                idx_minexwl:idx_maxexwl, idx_minwl:idx_maxwl) - darkrepeat; 
+            spectra_corrected = spectra_corrected./ fluxrepeat; 
+            obj.plotdata.spectra_excitation = sum(spectra_corrected, 4); 
+        case 'Dark Spectrum, Power, Beamsplitter' 
+            darkrepeat = repeatdark(obj, idx_minwl, idx_maxwl, ...
+                idx_minexwl:idx_maxexwl);
+            fluxrepeat = repeatflux(obj, idx_minexwl:idx_maxexwl, true);
+            spectra_corrected = obj.spectrometer.spectra(:, :, ...
+                idx_minexwl:idx_maxexwl, idx_minwl:idx_maxwl) - darkrepeat; 
+            spectra_corrected = spectra_corrected./ fluxrepeat; 
+            obj.plotdata.spectra_excitation = sum(spectra_corrected, 4); 
+    end
+end
+
+function set_spectra_power(obj, correctiontype)
+% Set the power spectra to plot according to the chosen correctiontype. 
+    excitation_min = obj.datapicker.MinExWavelengthSpinner.Value; 
+    excitation_max = obj.datapicker.MaxExWavelengthSpinner.Value; 
+    exwls = obj.laser.excitation_wavelengths; 
+
+    [~, idx_minexwl] = select_nearest(exwls, excitation_min); 
+    [~, idx_maxexwl] = select_nearest(exwls, excitation_max); 
+
+    obj.plotdata.wavelengths_excitation = ...
+        obj.laser.excitation_wavelengths(idx_minexwl:idx_maxexwl);
+
+    switch correctiontype
+        case 'Power at Meter'
+            obj.plotdata.power_excitation = ...
+                get_average_powermeter(obj, idx_minexwl:idx_maxexwl, ...
+                'power_averaged'); 
+        case 'Power at Sample (corrected for beamsplitter)'
+            correction_bs = correct_for_beamsplitter(obj, ...
+                idx_minexwl:idx_maxexwl);
+            correction_bs = repeat_columnvector(obj, correction_bs); 
+            power_averaged_meter = get_average_powermeter(obj, ...
+                idx_minexwl:idx_maxexwl, 'power_averaged'); 
+            obj.plotdata.power_excitation = power_averaged_meter .* ...
+                correction_bs; 
+        case 'Photon Flux at Meter'
+            obj.plotdata.power_excitation = ...
+                get_average_powermeter(obj, idx_minexwl:idx_maxexwl, ...
+                'flux_averaged'); 
+        case 'Photon Flux at Sample (corrected for beamsplitter)'
+            correction_bs = correct_for_beamsplitter(obj, ...
+                idx_minexwl:idx_maxexwl);
+            correction_bs = repeat_columnvector(obj, correction_bs); 
+            power_averaged_meter = get_average_powermeter(obj, ...
+                idx_minexwl:idx_maxexwl, 'flux_averaged'); 
+            obj.plotdata.power_excitation = power_averaged_meter .* ...
+                correction_bs; 
+    end
+end
+
 function darkrepeat = repeatdark(obj, idx_minwl, idx_maxwl, idx_ex_wls)
 % Repeat dark spectra to subtract from the emission spectra for the
 % relevant emission and excitation wavelengths. 
@@ -116,86 +212,69 @@ function fluxrepeat = repeatflux(obj, idx_ex_wls, beamsplitter_correction)
         beamsplitter_correction     (1,1) {mustBeNumericOrLogical}
     end
     
-    flux = obj.powermeter.flux_normalized(:, :, idx_ex_wls); 
+    flux = get_average_powermeter(obj, idx_ex_wls, 'flux_normalized'); 
 
     if beamsplitter_correction
         correction_bs = correct_for_beamsplitter(obj, idx_ex_wls);
-        correction_bs = repmat(...
-            correction_bs, [1, obj.xystage.ynum, obj.xystage.xnum]);
-        correction_bs = permute(correction_bs, [2 3 1]); 
+        correction_bs = repeat_columnvector(obj, correction_bs); 
         fluxrepeat = flux.*correction_bs; 
     else
         fluxrepeat = flux; 
     end
 end
 
+function average = get_average_powermeter(obj, idx_exwls, type)
+% Get the average power, average normalized power, average flux or average
+% normalized flux from the powermeter depending on the input type. 
+
+    arguments
+        obj (1,1) XYData
+        idx_exwls (:, 1) double {mustBePositive}
+        type string
+    end
+
+    % define constants for setting the averaged photon flux from the power.
+    h = 6.626e-34;     % planck constant
+    c = 2.997e8;       % speed of light 
+    ex_wls = obj.laser.excitation_wavelengths * 1e-9; % wavelengths in nm
+
+    power_averaged = mean(obj.powermeter.power(: , :,idx_exwls,:), 4); 
+    switch type
+        case 'power_averaged'
+            average = power_averaged; 
+        case 'power_normalized'
+            average = power_averaged ./ max(power_averaged, [], 'all');
+        case 'flux_averaged'
+            wls = repeat_columnvector(obj, ex_wls(idx_exwls)); 
+            average = power_averaged.* wls / (h * c);
+        case 'flux_normalized' 
+            wls = repeat_columnvector(obj, ex_wls(idx_exwls)); 
+            average = power_averaged.* wls / (h * c);
+            average = average ./ max(average, [], 'all');
+    end     
+end
+
+function vectorout = repeat_columnvector(obj, vector)
+% Repeats a column vector for every x and y point. 
+
+    arguments
+        obj (1,1) XYData
+        vector (:,1) double
+    end
+
+    ynum = obj.xystage.ynum; 
+    xnum = obj.xystage.xnum; 
+
+    vectorout = repmat(vector, 1, ynum, xnum); 
+    vectorout = permute(vectorout, [2 3 1]); 
+end
+
 function correction_bs = correct_for_beamsplitter(obj, idx_ex_wls)
-% Multiplies the normalized flux by the beamsplitter calibration
-% correction. Interpolates the beamsplitter calibration at the measured
+% Multiply the normalized flux by the beamsplitter calibration
+% correction. Interpolate the beamsplitter calibration at the measured
 % excitation wavelengths. 
     correction_bs = interp1(obj.beamsplitter.wavelengths, ...
                 obj.beamsplitter.correction_pm_to_sample, ...
                 obj.laser.excitation_wavelengths(idx_ex_wls)); 
     
 end
-
-function set_spectra_excitation(obj) 
-end
-
-
-
-
-% 
-% 
-% 
-% 
-%     switch correctiontype
-%         case 'Raw Spectra'
-%             obj.plotdata.spectra_emission = obj.spectrometer.spectra; 
-%         case 'Dark Removed' 
-%             darkrepeat = repmat(obj.spectrometer.darkspectrum, 1, ...
-%                 obj.xystage.xnum, obj.xystage.ynum, ...
-%                 obj.laser.wlnum); 
-%             darkrepeat = permute(darkrepeat, [2 3 4 1]); 
-%             obj.plotdata.spectra_emission = ...
-%                 obj.spectrometer.spectra-darkrepeat; 
-%         case 'Corrected for Power and Dark'
-%             darkrepeat = repmat(obj.spectrometer.darkspectrum, 1, ...
-%                 obj.xystage.xnum, obj.xystage.ynum, obj.laser.wlnum); 
-%             darkrepeat = permute(darkrepeat, [2 3 4 1]); 
-%     
-%             wls = repmat(obj.laser.excitation_wavelengths, 1,...
-%                 obj.xystage.xnum, obj.xystage.ynum);
-%             % change unit from nm to m
-%             wls = permute(wls, [2 3 1])*1e-9; 
-%     
-%             h = 6.626e-34;     % planck constant
-%             c = 2.997e8;       % speed of light 
-%     
-%             power_averaged = mean(obj.powermeter.power, 4); 
-%             flux_averaged = power_averaged.* ...
-%                 wls./(h*c); 
-%             obj.powermeter.flux_normalized = flux_averaged./ ...
-%                 max(flux_averaged, [], 3); 
-%             
-%             % interpolate beamsplitter calibration file with actual 
-%             % power measurements
-%             correction_beamsplitter = interp1(obj.beamsplitter.wavelengths, ...
-%                 obj.beamsplitter.correction_pm_to_sample, ...
-%                 obj.laser.excitation_wavelengths); 
-%             correction_beamsplitter = repmat(...
-%                 correction_beamsplitter, 1, ...
-%                 obj.xystage.xnum, obj.xystage.ynum); 
-%             correction_beamsplitter = permute(correction_beamsplitter, ...
-%                 [2 3 1]); 
-%             
-%             correction_total = correction_beamsplitter.*flux_averaged;
-%             correction_total = correction_total./max(correction_total, [], 3);
-%     
-%             obj.plotdata.spectra_emission = obj.spectrometer.spectra - ...
-%                 darkrepeat; 
-%             obj.plotdata.spectra_emission = obj.plotdata.spectra_emission./... 
-%                  correction_total; 
-
-
-

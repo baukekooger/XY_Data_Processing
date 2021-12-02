@@ -8,5 +8,12 @@ function reset_wavelengths(obj)
     obj.datapicker.MinWavelengthSpinner.Value = minwl; 
     obj.datapicker.MaxWavelengthSpinner.Value = maxwl; 
 
+    if strcmp(obj.experiment, 'excitation_emission')
+        minexwl = obj.laser.excitation_wavelengths(1); 
+        maxexwl = obj.laser.excitation_wavelengths(end); 
+        
+        obj.datapicker.MinExWavelengthSpinner.Value = minexwl; 
+        obj.datapicker.MaxExWavelengthSpinner.Value = maxexwl; 
+    end
 end
 

@@ -13,14 +13,7 @@ function plot_cursor_selection_excitation_emission(obj)
     if isempty(cursor_info)
         return
     end
-    
-    
-    % If the button for showing fits is enabled, make the fits.  
-%     show_fits = obj.datapicker.ShowFitSelectedPointsButton.Value; 
-%     if show_fits
-%         fit_selected_points(obj, cursor_info);
-%     end 
-    
+   
     % Delete all lines in the rgb plot and spectrum plot
     delete(findobj([obj.plotwindow.ax_spectrum, obj.plotwindow.ax_rgb], ...
         'Type', 'Line'))
@@ -32,11 +25,17 @@ function plot_cursor_selection_excitation_emission(obj)
     % Perform the plot based on which spectrumtype is selected.
     switch obj.datapicker.SpectraDropDown.Value
         case 'Emission'
+            legendcell = make_legendcell_emission(obj, cursor_info, ...
+                colors_markers); 
             plot_spectra_emission(obj, cursor_info, colors_markers)
             plot_position_indicators(obj, cursor_info, colors_markers);
-            set_annotation(obj, cursor_info, colors_markers);
+            set_annotation(obj, legendcell);
         case 'Excitation'
             plot_spectra_excitation(obj, cursor_info, colors_markers)
+            plot_position_indicators(obj, cursor_info, colors_markers);
+            set_annotation(obj)
+        case 'Power' 
+            plot_spectra_power(obj, cursor_info, colors_markers)
             plot_position_indicators(obj, cursor_info, colors_markers);
             set_annotation(obj)
     end
@@ -64,6 +63,34 @@ function plot_spectra_emission(obj, cursor_info, colors_markers)
                 colors_markers.markers{jj}, 'MarkerIndices', ...
                 1:markerstep:length(wavelengths));
         end
+    end
+    hold(obj.plotwindow.ax_spectrum, 'off');
+end
+
+function plot_spectra_excitation(obj, cursor_info, colors_markers)
+% Plot the excitation spectra for the selected points in the xy datapicker.
+
+    hold(obj.plotwindow.ax_spectrum, 'on');
+    wavelengths = obj.plotdata.wavelengths_excitation; 
+    for ii=1:length(cursor_info)
+        [~, idx, ~, idy] = get_cursor_position(obj, cursor_info, ii); 
+        spectrum = squeeze(obj.plotdata.spectra_excitation(idy, idx, :));  
+        plot(obj.plotwindow.ax_spectrum, wavelengths, spectrum, ...
+            'Color', colors_markers.colors(ii,:));
+    end
+    hold(obj.plotwindow.ax_spectrum, 'off');
+end
+
+function plot_spectra_power(obj, cursor_info, colors_markers)
+% Plot the excitation spectra for the selected points in the xy datapicker.
+
+    hold(obj.plotwindow.ax_spectrum, 'on');
+    wavelengths = obj.plotdata.wavelengths_excitation; 
+    for ii=1:length(cursor_info)
+        [~, idx, ~, idy] = get_cursor_position(obj, cursor_info, ii); 
+        spectrum = squeeze(obj.plotdata.power_excitation(idy, idx, :));  
+        plot(obj.plotwindow.ax_spectrum, wavelengths, spectrum, ...
+            'Color', colors_markers.colors(ii,:));
     end
     hold(obj.plotwindow.ax_spectrum, 'off');
 end
@@ -106,39 +133,111 @@ end
 %     hold off
 % end
 
-function set_annotation(obj, cursor_info, colors_markers)
+function set_annotation(obj, varargin)
 % Set plot limits based on the type of plot 
-    correctiontype = obj.datapicker.CorrectionDropDown.Value; 
-    switch correctiontype
-        case 'No Correction'
-            title(obj.plotwindow.ax_spectrum, ...
-                'Spectra without any correction');
-        case 'Dark Spectrum'
-            title(obj.plotwindow.ax_spectrum, ['Spectra with Dark ' ...
-                'Spectrum Removed']);
-        case 'Dark Spectrum, Power'
-            title(obj.plotwindow.ax_spectrum, ...
-                'Spectra corrected for Dark Spectrum and Power');
-        case 'Dark Spectrum, Power, Beamsplitter'
-            title(obj.plotwindow.ax_spectrum, ...
-                ['Spectra corrected for Dark Spectrum, Power' ...
-                ' and BeamSplitter']);
-    end
-
+    title(obj.plotwindow.ax_spectrum, title_spectrum(obj));
     ylim(obj.plotwindow.ax_spectrum, [-Inf, Inf])
-    ylabel(obj.plotwindow.ax_spectrum, 'counts');
-    minwl = obj.plotdata.wavelengths_emission(1); 
-    maxwl = obj.plotdata.wavelengths_emission(end); 
-    xlim(obj.plotwindow.ax_spectrum, [minwl, maxwl])
+    ylabel(obj.plotwindow.ax_spectrum, ylabel_spectrum(obj));
+    [min_x, max_x] = set_limits_spectrum(obj);
+    xlim(obj.plotwindow.ax_spectrum, [min_x, max_x])
     xlabel(obj.plotwindow.ax_spectrum, 'wavelength [nm]'); 
-    if length(obj.plotdata.wavelengths_excitation) > 1
-        legendcell = make_legendcell_emission(obj, cursor_info, ...
-            colors_markers); 
-        obj.plotwindow.ax_spectrum.Children = ...
-            flip(obj.plotwindow.ax_spectrum.Children);
+    if length(obj.plotdata.wavelengths_excitation) > 1 ...
+            && not(isempty(varargin))
+        legendcell = varargin{1}; 
         legend(obj.plotwindow.ax_spectrum, legendcell);
     end  
+end
 
+function title_spectrum = title_spectrum(obj)
+% Determine the title for the spectrum plot based on all the various
+% current settings.
+    spectratype = obj.datapicker.SpectraDropDown.Value; 
+    correctiontype = obj.datapicker.CorrectionDropDown.Value; 
+    switch spectratype
+        case 'Emission'
+            switch correctiontype
+                case 'No Correction'
+                    title_spectrum = [spectratype ...
+                        ' spectra without any correction']; 
+                case 'Dark Spectrum'
+                    title_spectrum = [spectratype ' Spectra with dark ' ...
+                        'spectrum removed'];
+                case 'Dark Spectrum, Power'
+                    title_spectrum = [spectratype ...
+                        ' spectra corrected for dark spectrum and power'];
+                case 'Dark Spectrum, Power, Beamsplitter'
+                    title_spectrum = [spectratype ...
+                        ' spectra corrected for dark spectrum, power' ...
+                        ' and Beamsplitter'];
+            end  
+        case 'Excitation'
+            emission_peak = obj.datapicker.EmissionPeakSpinner.Value; 
+            peak_width = obj.datapicker.PeakWidthSpinner.Value;
+            switch correctiontype
+                case 'No Correction'
+                    title_spectrum = [spectratype, [' spectra without ' ...
+                        'any correction, emissionpeak = '], ...
+                        sprintf('%.1f nm, ', emission_peak), ...
+                        'peak width = ', sprintf('%.1f nm', peak_width)]; 
+                case 'Dark Spectrum'
+                    title_spectrum = [spectratype, [' spectra with ' ...
+                        'dark spectrum removed, emissionpeak = '], ...
+                        sprintf('%.1f nm, ', emission_peak), ...
+                        'peak width = ', sprintf('%.1f nm', peak_width)]; 
+                case 'Dark Spectrum, Power'
+                    title_spectrum = [spectratype, [' spectra corrected ' ...
+                        'for dark spectrum and power, emissionpeak = '], ...
+                        sprintf('%.1f nm, ', emission_peak), ...
+                        'peak width = ', sprintf('%.1f nm', peak_width)]; 
+                case 'Dark Spectrum, Power, Beamsplitter'
+                    title_spectrum = [spectratype, [' spectra corrected ' ...
+                        'for dark spectrum, power and beamsplitter, emissionpeak = '], ...
+                        sprintf('%.1f nm, ', emission_peak), ...
+                        'peak width = ', sprintf('%.1f nm', peak_width)]; 
+            end
+        case 'Power'
+            switch correctiontype
+                case 'Power at Meter'
+                    title_spectrum = ['Averaged power measured at ' ...
+                        'powermeter'];
+                case 'Power at Sample (corrected for beamsplitter)'
+                    title_spectrum = ['Averaged power at sample, ' ...
+                        'corrected for beamsplitter']; 
+                case 'Photon Flux at Meter'
+                    title_spectrum = ['Averaged photon flux at ' ...
+                        'powermeter']; 
+                case 'Photon Flux at Sample (corrected for beamsplitter)'
+                    title_spectrum = ['Averaged photon flux at ' ...
+                        'powermeter, corrected for beamsplitter']; 
+            end
+    end
+end
+
+function [min_x, max_x] = set_limits_spectrum(obj)
+% Set the plotlimits of the x-axis based on the experiment. 
+    switch obj.datapicker.SpectraDropDown.Value
+        case 'Emission'
+            min_x = min(obj.plotdata.wavelengths_emission); 
+            max_x = max(obj.plotdata.wavelengths_emission);
+        case {'Excitation', 'Power'}
+            min_x = min(obj.plotdata.wavelengths_excitation); 
+            max_x = max(obj.plotdata.wavelengths_excitation);
+    end
+end
+
+function label = ylabel_spectrum(obj)
+    spectratype = obj.datapicker.SpectraDropDown.Value; 
+    correctiontype = obj.datapicker.CorrectionDropDown.Value; 
+    switch spectratype
+        case {'Emission', 'Excitation'}
+            label = 'counts'; 
+        case 'Power'
+            if contains(correctiontype, 'Photon')
+                label = 'photon flux [photons/s]'; 
+            else
+                label = 'power [W]'; 
+            end
+    end
 end
 
 
@@ -148,9 +247,7 @@ function legendcell = make_legendcell_emission(obj, cursor_info, ...
 % This enables setting the legend line color to a neutral color when 
 % multiple wavelengths and positions are plotted.
     
-    % Flipping the order of the wavelengths because the children of the 
-    % plot are also flipped for this legend. 
-    ex_wls = flip(obj.plotdata.wavelengths_excitation); 
+    ex_wls = obj.plotdata.wavelengths_excitation; 
     legendcell = cell(1, length(ex_wls));
     hold(obj.plotwindow.ax_spectrum, 'on');
     for ii = 1:length(ex_wls)

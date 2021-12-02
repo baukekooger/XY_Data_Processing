@@ -33,12 +33,7 @@ function read_excitation_emission(obj)
     end
     
     %% Read in all the measurement data
-
-    % define constants for setting the averaged photon flux from the power.
-    h = 6.626e-34;     % planck constant
-    c = 2.997e8;       % speed of light 
-    ex_wls = obj.laser.excitation_wavelengths * 1e-9; % wavelengths in nm
-
+    
     for x=1:obj.xystage.ynum
         for y=1:obj.xystage.xnum
             group = sprintf('/x%dy%d/', x, y);
@@ -49,18 +44,14 @@ function read_excitation_emission(obj)
             % take absolute to convert possibly small but negative powers.
             power = abs(permute(power, [2 1])); 
             obj.powermeter.power(y, x, :, :) = power;
-            obj.powermeter.flux_averaged(y, x, :) = ...
-                mean(power, 2) .* ex_wls / (h * c);
             obj.xystage.coordinates(y,x,:) = h5read(obj.fname, ...
                 [group 'position']);
-    
         end
     end
 
-    % normalize the flux 
-    obj.powermeter.flux_normalized = obj.powermeter.flux_averaged ./ ...
-    max(obj.powermeter.flux_averaged, [], 3);
-
+    % make time vector for powermeter. One measurement every 5 ms. 
+    number_of_samples = round(obj.powermeter.integration_time)/5; 
+    obj.powermeter.time = 0:1:(number_of_samples-1)*5; 
     %% Read the beamsplitter calibration file 
     % If no beamsplitter calibration file is found, notify user and prompt with
     % question if they want to manually add a beamsplitter calibration file. 

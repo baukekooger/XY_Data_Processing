@@ -103,5 +103,15 @@ for ii = 1:length(instruments)
     end
 end
 
+% try reading the beamsplitter info 
+try
+    filename = h5readatt(obj.fname, ...
+                '/calibration_beamsplitter', 'filename');
+    model = extractBetween(filename, 'BSC_', '_'); 
+    obj.beamsplitter.model = cell2mat(model);
+    calibration_date = extractBetween(filename, 'nm_', '.csv'); 
+    obj.beamsplitter.calibration_date = cell2mat(calibration_date); 
+catch
+
 end
 

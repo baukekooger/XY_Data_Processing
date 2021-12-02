@@ -62,6 +62,12 @@ function plot_transmission(obj)
         @(src, event)winopen('Optifit_Manual.pdf'); 
     obj.datapicker.ExportforOptifitButton.ButtonPushedFcn = ...
         @(src, event)export_for_optifit(obj); 
+    obj.datapicker.ColorMinEditField.ValueChangedFcn = ...
+        @(src, event)color_limits_changed(obj, src, event); 
+    obj.datapicker.ColorMaxEditField.ValueChangedFcn = ...
+        @(src, event)color_limits_changed(obj, src, event); 
+    obj.datapicker.ResetLimitsButton.ButtonPushedFcn = ...
+        @(src, event)plot_rgb_transmission(obj); 
 
 
     %% call the plot rgb function to plot an initial XY color chart 
@@ -94,7 +100,7 @@ function plot_transmission(obj)
     end
 
     function wavelength_range_changed_spinner(obj, src, event)
-        if not(check_range_wavelength_spinner(obj, src, event))
+        if not(check_range_spinner(obj, src, event))
             return
         end
         select_nearest_wavelength(obj) 
@@ -118,6 +124,14 @@ function plot_transmission(obj)
     function reset_wavelength_range(obj)
         reset_wavelengths(obj)
         set_wavelength_range(obj) 
+    end
+
+    function color_limits_changed(obj, src, event)
+        % check if the min limit is not higher than the max limit
+        if not(check_color_limits(obj, src, event))
+            return
+        end  
+        update_color_limits(obj) 
     end
 
 end

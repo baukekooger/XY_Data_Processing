@@ -7,6 +7,11 @@ function read_calibration_beamsplitter_csv(obj, fname)
         fname string
     end
 
+    model = extractBetween(fname, 'BSC_', '_'); 
+    obj.beamsplitter.model = cell2mat(model);
+    calibration_date = extractBetween(fname, 'nm_', '.csv'); 
+    obj.beamsplitter.calibration_date = cell2mat(calibration_date); 
+
     importoptions = detectImportOptions(fname); 
     data = readmatrix(fname, importoptions); 
     
