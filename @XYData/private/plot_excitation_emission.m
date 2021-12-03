@@ -30,26 +30,36 @@ function plot_excitation_emission(obj)
     startpeak = obj.spectrometer.wavelengths(ceil(end/2)); 
     obj.datapicker.EmissionPeakSpinner.Value = startpeak;  
     
-    % init the excitation wavelength spinners  
-    min_ex_wl = min(obj.laser.excitation_wavelengths);
-    max_ex_wl = max(obj.laser.excitation_wavelengths); 
-    step = mean(diff(obj.laser.excitation_wavelengths)); 
-
-    obj.datapicker.MinExWavelengthSpinner.Limits = [min_ex_wl, max_ex_wl]; 
-    obj.datapicker.MinExWavelengthSpinner.Step = step; 
-    obj.datapicker.MinExWavelengthSpinner.Value = min_ex_wl; 
-    
-    obj.datapicker.MaxExWavelengthSpinner.Limits = [min_ex_wl, max_ex_wl]; 
-    obj.datapicker.MaxExWavelengthSpinner.Step = step; 
-    obj.datapicker.MaxExWavelengthSpinner.Value = max_ex_wl;  
-
     excitation_wavelengths = string(obj.laser.excitation_wavelengths); 
     obj.datapicker.ExcitationWavelengthsListBox.Items = ...
         excitation_wavelengths; 
 
-    % set the default color chart option and disable the dropdown.
-    obj.datapicker.ColorChartDropDown.Items = {'default'}; 
-    obj.datapicker.ColorChartDropDown.Enable = 'off'; 
+    if obj.laser.wlnum > 1
+        % init the excitation wavelength spinners  
+        min_ex_wl = min(obj.laser.excitation_wavelengths);
+        max_ex_wl = max(obj.laser.excitation_wavelengths); 
+        step = mean(diff(obj.laser.excitation_wavelengths)); 
+    
+        obj.datapicker.MinExWavelengthSpinner.Limits = [min_ex_wl, max_ex_wl]; 
+        obj.datapicker.MinExWavelengthSpinner.Step = step; 
+        obj.datapicker.MinExWavelengthSpinner.Value = min_ex_wl; 
+        
+        obj.datapicker.MaxExWavelengthSpinner.Limits = [min_ex_wl, max_ex_wl]; 
+        obj.datapicker.MaxExWavelengthSpinner.Step = step; 
+        obj.datapicker.MaxExWavelengthSpinner.Value = max_ex_wl;  
+    
+    else 
+        % remove excitation and power from the data options. Set excitation
+        % spinners to the single excitation wavelength. 
+        obj.datapicker.SpectraDropDown.Items = {'Emission'};
+        obj.datapicker.MinExWavelengthSpinner.Value = ...
+            obj.laser.excitation_wavelengths; 
+        obj.datapicker.MaxExWavelengthSpinner.Value = ...
+            obj.laser.excitation_wavelengths; 
+    end
+        % set the default color chart option and disable the dropdown.
+        obj.datapicker.ColorChartDropDown.Items = {'default'}; 
+        obj.datapicker.ColorChartDropDown.Enable = 'off'; 
    
     %% initialize and connect data cursors
     obj.datacursor.xy = datacursormode(obj.datapicker.UIFigure);
