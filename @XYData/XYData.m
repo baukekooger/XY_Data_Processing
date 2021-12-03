@@ -328,7 +328,7 @@ classdef XYData < handle
     % a long list of private methods. 
     
     methods (Access=public)
-        function plot(obj, varargin)
+        function plot(obj)
            switch obj.experiment
                case 'transmission'
                    if isempty(obj.plotdata.spectra_transmission)
@@ -347,6 +347,27 @@ classdef XYData < handle
                    plot_decay(obj); 
            end
         end
+        function savexy(obj)
+        % Save the XYData object. Datapickers and figures are temporarily 
+        % removed from the object as they cannot be saved, and there is 
+        % also little point in saving them. Plotdata and fitdata are 
+        % stored. 
+            picker = obj.datapicker; 
+            window = obj.plotwindow; 
+            
+            obj.datapicker = []; 
+            obj.plotwindow = []; 
+        
+            directory = uigetdir(pwd); 
+            
+            filename = erase(obj.fname, '.hdf5'); 
+            filename = [directory, '\', filename]; 
+            save(filename, 'obj'); 
+        
+            obj.datapicker = picker; 
+            obj.plotwindow = window; 
+        end
+
     end
     
 end
