@@ -377,6 +377,5 @@ classdef XYData < handle
         end
 
     end
-    
 end
 
