@@ -57,8 +57,11 @@ function plot_rgb_decay(obj)
         % Set limits in the colorplot and also in the edit fields
         mincolor = min(colorsurface.CData, [], "all"); 
         maxcolor = max(colorsurface.CData, [], "all"); 
+        if mincolor == maxcolor
+            mincolor = mincolor * 0.9;
+            maxcolor = maxcolor * 1.1;
+        end
         caxis(obj.datapicker.UIAxes, [mincolor maxcolor]); 
-        colorbar(obj.datapicker.UIAxes)
         obj.datapicker.ColorMinEditField.Value = mincolor; 
         obj.datapicker.ColorMaxEditField.Value = maxcolor; 
     end
@@ -78,10 +81,39 @@ function plot_rgb_decay(obj)
     ytickformat(obj.datapicker.UIAxes, '%.1f')
     axis(obj.datapicker.UIAxes, 'image') 
     
-    if any(cellfun(@isempty, obj.fitdata.fitobjects), 'all')
-        title(obj.datapicker.UIAxes, ['Incomplete fitdata, colors ' ...
-            'indicate sum of signal for selected timerange']); 
+    % Set title if no fitdata is available
+    switch obj.datapicker.ColorChartDropDown.Value
+        case 'default'
+            rgbtitle = [obj.sample ' - sum of spectrum for ' ...
+                'selected timerange'];
+        case 'C'
+            rgbtitle = [obj.sample ' - Fit parameter C'];
+        case 'C1'
+            rgbtitle = [obj.sample ' - Fit parameter C1'];
+        case 'C2'
+            rgbtitle = [obj.sample ' - Fit parameter C2'];
+        case 'tau'
+            rgbtitle = [obj.sample ' - Decay time constant ' ...
+                '\tau from fit (\mus)'];
+        case 'tau_1' 
+            rgbtitle = [obj.sample ' - Decay time constant \tau_1 ' ...
+                'from fit (\mus)'];
+        case 'tau_2' 
+            rgbtitle = [obj.sample ' - Decay time constant \tau_2 ' ...
+                'from fit (\mus)'];
+        case 'sse' 
+            rgbtitle = [obj.sample ' - Sum of squares error of fit (SSE)'];
+        case 'rsquare' 
+            rgbtitle = [obj.sample ' - RSquare value of fit'];
+        case 'dfe' 
+            rgbtitle = [obj.sample ' - Degrees of freedom error of fit'];
+        case 'adjrsquare' 
+            rgbtitle = [obj.sample ' - Degrees of freedom ' ...
+                'adjusted RSquare of fit'];
+        case 'rmse' 
+            rgbtitle = [obj.sample ' - Root mean squared error'];
     end
+    title(obj.datapicker.UIAxes, rgbtitle)
     
     hold(obj.datapicker.UIAxes, 'off')
     

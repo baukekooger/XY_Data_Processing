@@ -28,7 +28,7 @@ end
 
 function single_entry = single_entry_fittable(obj, cursor_info, ...
     index_cursor, wl, index_wl)
-% make one row of fit data for the fit data table 
+    % make one row of fit data for the fit data table 
 
     [x, idx, y, idy] = get_cursor_position(obj, cursor_info, index_cursor); 
 
@@ -41,10 +41,20 @@ function single_entry = single_entry_fittable(obj, cursor_info, ...
     table_index = splitvars(table_index);
     table_index.Properties.VariableNames = name_index; 
 
-    names_coefficients = ...
-        coeffnames(obj.fitdata.fitobjects{idy, idx, index_wl});  
-    values_coefficients = ...
-        coeffvalues(obj.fitdata.fitobjects{idy, idx, index_wl});
+    switch obj.datapicker.FitTypeDropDown.Value
+        case 'Single Exponential'
+            names_coefficients = {'C'; 'tau (mircos)'};
+            values_coefficients = ...
+                coeffvalues(obj.fitdata.fitobjects{idy, idx, index_wl});
+            values_coefficients(2) = -1e6/values_coefficients(2); 
+        case 'Double Exponential' 
+                        names_coefficients = {'C1'; 'tau1 (micros)'; ...
+                            'C2'; 'tau_2 (micros)'};
+            values_coefficients = ...
+                coeffvalues(obj.fitdata.fitobjects{idy, idx, index_wl});
+            values_coefficients(2) = -1e6/values_coefficients(2); 
+            values_coefficients(4) = -1e6/values_coefficients(4); 
+    end
     
     table_coefficients = table(values_coefficients); 
     table_coefficients = splitvars(table_coefficients); 

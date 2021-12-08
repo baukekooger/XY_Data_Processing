@@ -30,7 +30,7 @@ compress_data_decay(obj)
 update_time_spinner(obj) 
 
 % get the selected excitation wavelength(s) 
-ex_wls = str2double(obj.datapicker.ExcitationWavelengthListBox.Value);
+ex_wls = str2double(obj.datapicker.ExcitationWavelengthsListBox.Value);
 [~, ex_index, ~] = intersect(obj.laser.excitation_wavelengths, ...
             ex_wls); 
 

@@ -59,10 +59,14 @@ function obj = plot_rgb_excitation_emission(obj)
             colorsurface.CData = flipud(obj.plotdata.rgb);  
         end
             % Set limits in the colorplot and also in the edit fields
+        colorbar(obj.datapicker.UIAxes)
         mincolor = min(colorsurface.CData, [], "all"); 
         maxcolor = max(colorsurface.CData, [], "all"); 
+        if mincolor == maxcolor
+            mincolor = mincolor * 0.9;
+            maxcolor = maxcolor * 1.1;
+        end
         caxis(obj.datapicker.UIAxes, [mincolor maxcolor]); 
-        colorbar(obj.datapicker.UIAxes)
         obj.datapicker.ColorMinEditField.Value = mincolor; 
         obj.datapicker.ColorMaxEditField.Value = maxcolor; 
     end

@@ -57,11 +57,14 @@ function obj = plot_rgb_transmission(obj)
             colorsurface.CData = flipud(obj.plotdata.rgb);  
         end
         colorbar(obj.datapicker.UIAxes)
-            % Set limits in the colorplot and also in the edit fields
+        % Set limits in the colorplot and also in the edit fields
         mincolor = min(colorsurface.CData, [], "all"); 
         maxcolor = max(colorsurface.CData, [], "all"); 
+        if mincolor == maxcolor
+            mincolor = mincolor * 0.9;
+            maxcolor = maxcolor * 1.1;
+        end
         caxis(obj.datapicker.UIAxes, [mincolor maxcolor]); 
-        colorbar(obj.datapicker.UIAxes)
         obj.datapicker.ColorMinEditField.Value = mincolor; 
         obj.datapicker.ColorMaxEditField.Value = maxcolor; 
     end
@@ -82,10 +85,23 @@ function obj = plot_rgb_transmission(obj)
     axis(obj.datapicker.UIAxes, 'image') 
     
     % Set title if no fitdata is available
-    if any(cellfun(@isempty, obj.fitdata.fitobjects), 'all')
-        title(obj.datapicker.UIAxes, ['Incomplete fitdata, colors ' ...
-            'indicate sum of signal for selected timerange']); 
+    switch obj.datapicker.ColorChartDropDown.Value
+        case 'default'
+            rgbtitle = [obj.sample ' - sum of spectrum for ' ...
+                'selected timerange'];
+        case 'thickness'
+            rgbtitle = [obj.sample '- Thicknes from fit ' ...
+                'data (nm).'];
+        case 'refractive index (589 nm)'
+            rgbtitle = [obj.sample '- Refractive index at 589 nm from' ...
+                ' fit data.'];
+        case 'extinction coefficient'
+            rgbtitle = [obj.sample '- Extinction coefficient from' ...
+                ' fit data.'];
+        case 'fit quality (adj.rsquare)' 
+            rgbtitle = [obj.sample '- Fit quality (adjusted R-Square)'];
     end
+    title(obj.datapicker.UIAxes, rgbtitle)
     hold(obj.datapicker.UIAxes, 'off')
     
     %% plot the xy chart on the plotwindow indicator if available. 
