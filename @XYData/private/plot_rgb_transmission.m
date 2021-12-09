@@ -45,8 +45,9 @@ function obj = plot_rgb_transmission(obj)
 
     if size(obj.xystage.coordinates, 1) > 1 && ...
             size(obj.xystage.coordinates, 2) > 1
-        % Plot the colorchart if none exists. flipping the data is necessary 
-        % for correct display. If it exists, update the color data. 
+        % Plot the colorchart if none exists. flipping the data is 
+        % necessary for correct display. If it exists, update the 
+        % color data. 
         colorsurface = findobj(obj.datapicker.UIAxes, 'Type', 'Surface');
         if isempty(colorsurface)
             colorsurface = pcolor(obj.datapicker.UIAxes, x, y, ...
@@ -57,11 +58,14 @@ function obj = plot_rgb_transmission(obj)
             colorsurface.CData = flipud(obj.plotdata.rgb);  
         end
         colorbar(obj.datapicker.UIAxes)
-            % Set limits in the colorplot and also in the edit fields
+        % Set limits in the colorplot and also in the edit fields
         mincolor = min(colorsurface.CData, [], "all"); 
         maxcolor = max(colorsurface.CData, [], "all"); 
+        if mincolor == maxcolor
+            mincolor = mincolor * 0.9;
+            maxcolor = maxcolor * 1.1;
+        end
         caxis(obj.datapicker.UIAxes, [mincolor maxcolor]); 
-        colorbar(obj.datapicker.UIAxes)
         obj.datapicker.ColorMinEditField.Value = mincolor; 
         obj.datapicker.ColorMaxEditField.Value = maxcolor; 
     end
@@ -81,11 +85,34 @@ function obj = plot_rgb_transmission(obj)
     ytickformat(obj.datapicker.UIAxes, '%.1f')
     axis(obj.datapicker.UIAxes, 'image') 
     
-    % Set title if no fitdata is available
-    if any(cellfun(@isempty, obj.fitdata.fitobjects), 'all')
-        title(obj.datapicker.UIAxes, ['Incomplete fitdata, colors ' ...
-            'indicate sum of signal for selected timerange']); 
+    % Set title 
+    sample = clean_string(obj.sample); 
+    parameter = obj.datapicker.ColorChartDropDown.Value;
+    switch parameter
+        case 'default'
+            rgbtitle = [sample ' - Sum of spectrum for ' ...
+                'selected timerange'];
+        case 'thickness'
+            rgbtitle = [sample '- Thickness from fit ' ...
+                'data (nm).'];
+        case 'refractive index (589 nm)'
+            rgbtitle = [sample '- Refractive index at 589 nm from' ...
+                ' fit data.'];
+        case coeffnames(obj.fitdata.fitobjects{1,1})
+            rgbtitle = [sample '- Fitting parameter ' parameter];
+        case 'sse' 
+            rgbtitle = [sample ' - Sum of squares error of fit (SSE)'];
+        case 'rsquare' 
+            rgbtitle = [sample ' - RSquare value of fit'];
+        case 'dfe' 
+            rgbtitle = [sample ' - Degrees of freedom error of fit'];
+        case 'adjrsquare' 
+            rgbtitle = [sample ' - Degrees of freedom ' ...
+                'adjusted RSquare of fit'];
+        case 'rmse' 
+            rgbtitle = [sample ' - Root mean squared error'];
     end
+    title(obj.datapicker.UIAxes, rgbtitle)
     hold(obj.datapicker.UIAxes, 'off')
     
     %% plot the xy chart on the plotwindow indicator if available. 
@@ -107,7 +134,8 @@ function obj = plot_rgb_transmission(obj)
     
     if size(obj.xystage.coordinates, 1) > 1 && ...
         size(obj.xystage.coordinates, 2) > 1
-        % plot the colorchart. flipping the data is necessary for correct display
+        % plot the colorchart. flipping the data is necessary for 
+        % correct display
         colorsurface = pcolor(obj.plotwindow.ax_rgb, x, y, ...
             flipud(obj.plotdata.rgb));
         colorsurface.FaceColor = 'interp';

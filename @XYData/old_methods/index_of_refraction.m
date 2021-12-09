@@ -1,7 +1,7 @@
 function n = index_of_refraction(XYEEobj, varargin)
 % extinction_coefficient yields the extinction coefficients as fitted
 
-n1 = @(a, b, x)( sqrt( 1 + a .* x.^2 ./ (x.^2 - b.^2)) );
+n1 = @(a, b, x)( sqrt( 1 + a .* x.^2 ./ (x.^2 - b.^2)));
     
 v = cellfun(@(x)(n1(x.an, x.bn, XYEEobj.em_wl)), ...
     XYEEobj.fitdata.fitresult, 'UniformOutput', false);

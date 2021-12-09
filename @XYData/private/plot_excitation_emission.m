@@ -33,7 +33,7 @@ function plot_excitation_emission(obj)
     excitation_wavelengths = string(obj.laser.excitation_wavelengths); 
     obj.datapicker.ExcitationWavelengthsListBox.Items = ...
         excitation_wavelengths; 
-
+    
     if obj.laser.wlnum > 1
         % init the excitation wavelength spinners  
         min_ex_wl = min(obj.laser.excitation_wavelengths);
@@ -112,12 +112,23 @@ function plot_excitation_emission(obj)
         @(src, event)plot_rgb_excitation_emission(obj); 
     obj.datapicker.SelectBeamsplitterButton.ButtonPushedFcn = ...
         @(src, event)select_beamsplitter(obj); 
-        
-
-
-    %% call the rgb function to plot an initial XY color chart
+    obj.datapicker.FitTypeDropDown.ValueChangedFcn = ...
+        @(src, event)fittype_changed(obj); 
+    obj.datapicker.ShowFitSelectedButton.ValueChangedFcn = ...
+        @(src, event)plot_cursor_selection_excitation_emission(obj); 
+    obj.datapicker.FitAllButton.ButtonPushedFcn = ...
+        @(src, event)fit_all_button_pushed(obj); 
+    obj.datapicker.ColorChartDropDown.ValueChangedFcn = ...
+        @(src, event)plottype_changed(obj); 
+    obj.datapicker.SaveButton.ButtonPushedFcn = ...
+        @(src, event)savexy(obj); 
+      
+    %% call initialization functions. 
+    % call the rgb function to plot an initial XY color chart, 
+    % set the initial fit type
     set_rgb_excitation_emission(obj);
     plot_rgb_excitation_emission(obj);
+    set_fittype_excitation_emission(obj); 
 
     %% define sequenced callbacks
     function datatip_text_xy =  wrapper_cursor_clicked_xy(event, obj)
@@ -146,6 +157,7 @@ function plot_excitation_emission(obj)
         % Set the correction options, these are different for when power is
         % selected. 
         set_correction_options(obj, event); 
+        reset_fitdata(obj); 
         set_spectra(obj); 
     end
 
@@ -155,6 +167,7 @@ function plot_excitation_emission(obj)
         set_spectra_excitation_emission(obj);
         set_rgb_excitation_emission(obj);
         plot_rgb_excitation_emission(obj);
+        reset_fitdata(obj)
         plot_cursor_selection_excitation_emission(obj);
     end
 
@@ -183,6 +196,25 @@ function plot_excitation_emission(obj)
         filename = uigetfile('*.csv', ['Select a beamsplitter ...' ...
             'calibration file']);
         read_calibration_beamsplitter_csv(obj, filename); 
+    end
+
+    function fittype_changed(obj)
+        reset_fitdata(obj); 
+        set_fittype_excitation_emission(obj); 
+        plot_cursor_selection_excitation_emission(obj);
+    end
+
+    function fit_all_button_pushed(obj) 
+        enable_gui(obj, 'off')
+        fit_all_excitation_emission(obj)
+        set_plotmethods_fitted_data(obj)
+        enable_gui(obj, 'on') 
+    end
+
+    function plottype_changed(obj)
+       set_rgb_excitation_emission(obj) ;
+       plot_rgb_excitation_emission(obj);
+       plot_cursor_selection_excitation_emission(obj);
     end
 
 end

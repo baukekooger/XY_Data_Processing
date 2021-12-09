@@ -261,7 +261,7 @@ classdef XYData < handle
             'xnum', [], 'ynum', [])
         fitdata = struct('fitobjects', [], 'goodnesses', [], ...
             'outputs', [], 'fitoptions', [], 'fittype', [], ...
-            'optifit_fname', [])  
+            'optifit_data', [])  
         plotdata = struct('spectra_transmission', [], ...
             'wavelengths_transmission', [], ...
             'darkspectrum_transmission', [], ...
@@ -284,20 +284,40 @@ classdef XYData < handle
             if ~N
                 return
             end
-            
-            % Copy the XYData object if given in the first argument
             k=1;
-            if isa(varargin{k}, class(obj)) && k==1
-                obj = varargin{k};
+            [~, ~, extension] = fileparts(varargin{k});  
+            if strcmp(extension, '.mat')
+                % Load existing XY Data from matfile.
+                % Load the matfile and check that there is only one object
+                % of class XYData. Otherwise return and throw an error. 
+                try 
+                    obj = load(varargin{k}).obj; 
+                catch
+                    error(['Invalid file, please select file ' ...
+                        'containing XYData object as obj'])
+                end
                 k=k+1;
-            end
-            if isa(varargin{k}, 'char') && k==1
+            elseif strcmp(extension, '.hdf5')  
+                % Read the data from the hdf5 file if XYobject is
+                % instantiated from filename. 
                 obj.fname = varargin{k};
                 k=k+1;
+                read_attributes(obj);  
+                switch obj.experiment
+                    case 'excitation_emission'
+                        read_excitation_emission(obj);
+                    case 'decay'
+                        read_decay(obj);
+                    case 'transmission'
+                        read_transmission(obj);
+                end
+            else
+                error(['Invalid filename, must be either XY .hdf5 file ' ...
+                    'or .mat file containing an XYData object as obj'])
             end
-            
             varargin = varargin(k:end);
-            
+            % Default behaviour is to plot the data if no plotargument is
+            % given. 
             plotme = true;
             for k=1:2:numel(varargin)
                 switch varargin{k}
@@ -305,18 +325,6 @@ classdef XYData < handle
                         plotme = varargin{k+1};
                 end
             end
-            
-            read_attributes(obj);  
-
-            switch obj.experiment
-                case 'excitation_emission'
-                    read_excitation_emission(obj);
-                case 'decay'
-                    read_decay(obj);
-                case 'transmission'
-                    read_transmission(obj);
-            end
-            
             if plotme
                 plot(obj);
             end
@@ -369,6 +377,5 @@ classdef XYData < handle
         end
 
     end
-    
 end
 

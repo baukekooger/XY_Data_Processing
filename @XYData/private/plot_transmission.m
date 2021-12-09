@@ -68,11 +68,23 @@ function plot_transmission(obj)
         @(src, event)color_limits_changed(obj, src, event); 
     obj.datapicker.ResetLimitsButton.ButtonPushedFcn = ...
         @(src, event)plot_rgb_transmission(obj); 
-
+    obj.datapicker.ImportOptifitDataButton.ButtonPushedFcn = ...
+        @(src, event)read_optifit_data(obj); 
+    obj.datapicker.FitSinglePointButton.ButtonPushedFcn = ...
+        @(src, event)fit_single_point(obj);
+    obj.datapicker.FitAllButton.ButtonPushedFcn = ...
+        @(src, event)fit_all_button_pushed(obj); 
+    obj.datapicker.ShowFitsButton.ValueChangedFcn = ... 
+        @(src, event)show_fit_button_pushed(obj); 
+    obj.datapicker.ColorChartDropDown.ValueChangedFcn = ...
+        @(src, event)changed_plottype_rgb(obj); 
+    obj.datapicker.SaveButton.ButtonPushedFcn = ...
+        @(src, event)savexy(obj); 
 
     %% call the plot rgb function to plot an initial XY color chart 
     set_rgb_transmission(obj);
     plot_rgb_transmission(obj);
+    set_plotmethods_fitted_data(obj);
     
     %% define sequenced callbacks
 
@@ -132,6 +144,68 @@ function plot_transmission(obj)
             return
         end  
         update_color_limits(obj) 
+    end
+
+    function fit_single_point(obj)
+        % Fit the point corresponding to the exported point for fitting in
+        % optifit, with the optifit fit data. Check if optifit data is
+        % present and if not already fitted. 
+        if isempty(obj.fitdata.optifit_data)
+            if not(request_user_optifit_data(obj))
+                return
+            end
+        elseif not(all(cellfun(@isempty, obj.fitdata.fitobjects), 'all'))
+            if not(request_user_refit_singlefit)
+                return
+            end
+        end
+        fit_transmission_single_point(obj)
+    end
+
+    function fit_all_button_pushed(obj)
+        % fit all the points on the film starting from the optifit seed
+        % fit. disable the gui while doing so. 
+        enable_gui(obj, 'off') 
+        if not(strcmp(obj.datapicker.SpectraDropDown.Value, ...
+                'Transmission'))
+            uialert(obj.datapicker.UIFigure, ['Cannot fit data with ' ...
+                'selected spectra type. Please set spectra ' ...
+                'to Transmission.'], 'Wrong spectra selected', ...
+                'Icon', 'Error')
+            enable_gui(obj, 'on') 
+            return
+        end
+        if all(cellfun(@isempty, obj.fitdata.fitobjects), 'all')
+            if not(request_user_optifit_data(obj))
+                enable_gui(obj, 'on')
+                return
+            end
+            fit_single_point(obj)
+        elseif not(any(cellfun(@isempty, obj.fitdata.fitobjects), 'all'))
+            if not(request_user_refit_all)
+                enable_gui(obj, 'on')
+                return
+            end
+        end
+        fit_all_transmission(obj)
+        set_plotmethods_fitted_data(obj)
+        enable_gui(obj, 'on')
+    end
+
+    function show_fit_button_pushed(obj)
+        % Enable only if all fits are made. 
+        if any(cellfun(@isempty, obj.fitdata.fitobjects), 'all')
+            uialert(obj.datapicker.UIFigure, ['No fitdata present for ' ...
+                'all points. Please fit all data first.'], ...
+                'Incomplete fitdata', 'Icon', 'Info')
+            obj.datapicker.ShowFitsButton.Value = 0; 
+        end
+    end
+
+    function changed_plottype_rgb(obj)
+        % change the rgb data for the color plot. 
+        set_rgb_transmission(obj);
+        plot_rgb_transmission(obj);
     end
 
 end

@@ -166,7 +166,7 @@ else
         'k--', xData, yData, '.');
     title('k');
     
-    [fitresult, gof] =  produce_fit( x0, y0, 0, [guess_n, guess_k, d0] );
+    [fitresult, gof] =  produce_fit( x0, y0, 0, [guess_n, guess_k, d0]);
     fitresults{x0, y0} = fitresult;
     figure; plot(wl, squeeze(XYEEobj.spectrum(x0,y0,inclWl)), wl, fitresult(wl));
     gofs{x0, y0} = gof;

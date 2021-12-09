@@ -49,14 +49,12 @@ function obj = fit_selected_points(obj, cursor_info)
     for ii = 1:length(cursor_info)
         [~, idx, ~, idy] = get_cursor_position(obj, cursor_info, ii);
         for jj = 1:length(ex_index) 
-            if isempty(obj.fitdata.fitobjects{idy, idx, ex_index})
-                obj = fit_single_trace_decay(obj, idy, idx, ex_index); 
+            if isempty(obj.fitdata.fitobjects{idy, idx, jj})
+                obj = fit_single_trace_decay(obj, idy, idx, jj); 
             end
         end
     end
 end
-
-
 
 function obj = plot_spectra_decay(obj, cursor_info, colors_markers) 
 % plot the spectra corresponding to the selected position point. 
@@ -102,14 +100,14 @@ end
 
 function obj = plot_fits(obj, cursor_info, colors_markers)
 % plot the fits for the selected datapoints. 
-    [ex_wls, ex_index] = get_excitation_wavelengths(obj); 
+    [ex_wls, ~] = get_excitation_wavelengths(obj); 
     % set current axes cause cfit object takes no axes argument.
     axes(obj.plotwindow.ax_spectrum)
     hold on
     for ii=1:length(cursor_info)
         [~, idx, ~, idy] = get_cursor_position(obj, cursor_info, ii); 
         for jj = 1:length(ex_wls)
-            fitobj = obj.fitdata.fitobjects{idy, idx, ex_index(jj)}; 
+            fitobj = obj.fitdata.fitobjects{idy, idx, jj}; 
             color = colors_markers.colors(ii,:)*0.7; 
             marker = colors_markers.markers{jj};
             fp = plot(fitobj); 

@@ -8,49 +8,42 @@ function set_rgb_decay(obj)
         return
     end
 
-    switch obj.datapicker.ColorChartPlotTypeDropDown.Value
+    switch obj.datapicker.ColorChartDropDown.Value
         case 'default'
             obj.plotdata.rgb = sum(obj.plotdata.spectra_decay, [3 4]); 
-        case 'a' 
-            obj.plotdata.rgb = cellfun(@coeffvalues, ...
-                obj.fitdata.fitobjects, 'UniformOutput', false);
-            obj.plotdata.rgb = cellfun(@(x)x(1), ...
-                obj.plotdata.rgb); 
-       case 'b' 
-            obj.plotdata.rgb = cellfun(@coeffvalues, ...
-                obj.fitdata.fitobjects, 'UniformOutput', false);
-            obj.plotdata.rgb = cellfun(@(x)x(2), ...
-                obj.plotdata.rgb); 
-       case 'c' 
-            obj.plotdata.rgb = cellfun(@coeffvalues, ...
-                obj.fitdata.fitobjects, 'UniformOutput', false);
-            obj.plotdata.rgb = cellfun(@(x)x(3), ...
-                obj.plotdata.rgb); 
-       case 'd' 
-            obj.plotdata.rgb = cellfun(@coeffvalues, ...
-                obj.fitdata.fitobjects, 'UniformOutput', false);
-            obj.plotdata.rgb = cellfun(@(x)x(4), ...
-                obj.plotdata.rgb); 
+        case {'C', 'C1'}
+            obj.plotdata.rgb = cellfun(@(x)(x.a), ...
+                obj.fitdata.fitobjects); 
+       case {'tau', 'tau_1'} 
+            obj.plotdata.rgb = cellfun(@(x)(x.b), ...
+                obj.fitdata.fitobjects); 
+            % Invert coefficient to get decay time, and multiply by 1e6 to
+            % get decay time in microseconds. 
+            obj.plotdata.rgb = -1e6./obj.plotdata.rgb; 
+       case 'C2' 
+            obj.plotdata.rgb = cellfun(@(x)(x.c), ...
+                obj.fitdata.fitobjects); 
+       case 'tau_2' 
+            obj.plotdata.rgb = cellfun(@(x)(x.d), ...
+                obj.fitdata.fitobjects); 
+            % Invert coefficient to get decay time, and multiply by 1e6 to
+            % get decay time in microseconds. 
+            obj.plotdata.rgb = -1e6./obj.plotdata.rgb; 
         case 'sse'
-            obj.plotdata.rgb = cellfun(@(x)x.sse, ...
-                obj.fitdata.goodnesses, 'UniformOutput', false); 
-            obj.plotdata.rgb = cell2mat(obj.plotdata.rgb); 
+            obj.plotdata.rgb = cellfun(@(x)(x.sse), ...
+                obj.fitdata.goodnesses); 
         case 'rsquare'
-            obj.plotdata.rgb = cellfun(@(x)x.rsquare, ...
-                obj.fitdata.goodnesses, 'UniformOutput', false); 
-            obj.plotdata.rgb = cell2mat(obj.plotdata.rgb);
+            obj.plotdata.rgb = cellfun(@(x)(x.rsquare), ...
+                obj.fitdata.goodnesses);
         case 'dfe'
-            obj.plotdata.rgb = cellfun(@(x)x.dfe, ...
-                obj.fitdata.goodnesses, 'UniformOutput', false); 
-            obj.plotdata.rgb = cell2mat(obj.plotdata.rgb);
+            obj.plotdata.rgb = cellfun(@(x)(x.dfe), ...
+                obj.fitdata.goodnesses);
         case 'adjrsquare'
-            obj.plotdata.rgb = cellfun(@(x)x.adjrsquare, ...
-                obj.fitdata.goodnesses, 'UniformOutput', false); 
-            obj.plotdata.rgb = cell2mat(obj.plotdata.rgb);
+            obj.plotdata.rgb = cellfun(@(x)(x.adjrsquare), ...
+                obj.fitdata.goodnesses);
         case 'rmse'
-            obj.plotdata.rgb = cellfun(@(x)x.rmse, ...
-                obj.fitdata.goodnesses, 'UniformOutput', false); 
-            obj.plotdata.rgb = cell2mat(obj.plotdata.rgb);
+            obj.plotdata.rgb = cellfun(@(x)(x.rmse), ...
+                obj.fitdata.goodnesses);
     end 
 
 end

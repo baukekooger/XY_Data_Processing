@@ -12,7 +12,7 @@ function fit_all_decay(obj)
     xnum = obj.xystage.xnum; 
     [wls, ~] = get_excitation_wavelengths(obj); 
     wlnum = length(wls);
-    total_points = double(xnum*ynum*wlnum); 
+    total_points = double(xnum * ynum * wlnum); 
     
     counter = 1; 
     for ii = 1:ynum

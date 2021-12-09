@@ -28,10 +28,20 @@ function plot_cursor_selection_excitation_emission(obj)
             legendcell = make_legendcell_emission(obj, cursor_info, ...
                 colors_markers); 
             plot_spectra_emission(obj, cursor_info, colors_markers)
+            if obj.datapicker.ShowFitSelectedButton.Value
+                fit_selected(obj, cursor_info); 
+                plot_fits(obj, cursor_info, colors_markers);
+                show_fitdata_table(obj, cursor_info)  
+            end
             plot_position_indicators(obj, cursor_info, colors_markers);
             set_annotation(obj, legendcell);
         case 'Excitation'
             plot_spectra_excitation(obj, cursor_info, colors_markers)
+            if obj.datapicker.ShowFitSelectedButton.Value
+                fit_selected(obj, cursor_info)
+                plot_fits(obj, cursor_info, colors_markers)
+                show_fitdata_table(obj, cursor_info)  
+            end
             plot_position_indicators(obj, cursor_info, colors_markers);
             set_annotation(obj)
         case 'Power' 
@@ -112,26 +122,80 @@ function plot_position_indicators(obj, cursor_info, colors_markers)
     hold(obj.plotwindow.ax_rgb, 'off');
 end
 
-% function plot_fits(obj, cursor_info, colors_markers)
-% % plot the fits for the selected datapoints. 
-%     [ex_wls, ex_index] = get_excitation_wavelengths(obj); 
-%     % set current axes cause cfit object takes no axes argument.
-%     axes(obj.plotwindow.ax_spectrum)
-%     hold on
-%     for ii=1:length(cursor_info)
-%         [~, idx, ~, idy] = get_cursor_position(obj, cursor_info, ii); 
-%         for jj = 1:length(ex_wls)
-%             fitobj = obj.fitdata.fitobjects{idy, idx, ex_index(jj)}; 
-%             color = colors_markers.colors(ii,:)*0.7; 
-%             marker = colors_markers.markers{jj};
-%             fp = plot(fitobj); 
-%             fp.Color = color;
-%             fp.Marker = marker; 
-%             fp.LineWidth = 1.5;
-%         end
-%     end
-%     hold off
-% end
+function obj = fit_selected(obj, cursor_info)
+% Fit the current spectra
+    switch obj.datapicker.SpectraDropDown.Value 
+        case 'Emission'
+            % Get the selected excitation wavelength index
+            [~, ex_index] = get_excitation_wavelengths(obj); 
+            % Get the position index. Check if there is already fit data. 
+            % Otherwise perform the fit for that specific index. 
+            for ii = 1:length(cursor_info)
+                [~, idx, ~, idy] = ...
+                    get_cursor_position(obj, cursor_info, ii);
+                for jj = 1:length(ex_index) 
+                    if isempty(...
+                            obj.fitdata.fitobjects{idy, idx, jj})
+                        obj = ...
+                            fit_single_emission(obj, idy, idx, jj); 
+                    end
+                end
+            end
+        case 'Excitation'
+            for ii = 1:length(cursor_info)
+                [~, idx, ~, idy] = ...
+                    get_cursor_position(obj, cursor_info, ii);            
+                if isempty(...
+                        obj.fitdata.fitobjects{idy, idx})
+                    obj = ...
+                        fit_single_excitation(obj, idy, idx); 
+                end
+            end
+    end
+end
+
+function plot_fits(obj, cursor_info, colors_markers)
+% plot the fits for the selected datapoints. 
+    switch obj.datapicker.SpectraDropDown.Value 
+        case 'Emission'
+            number_of_markers = 20;
+            markerstep = ceil(length(obj.plotdata.wavelengths_emission) / ...
+            number_of_markers);
+
+            [ex_wls, ~] = get_excitation_wavelengths(obj); 
+            % set current axes cause cfit object takes no axes argument.
+            axes(obj.plotwindow.ax_spectrum)
+            hold on
+            for ii=1:length(cursor_info)
+                [~, idx, ~, idy] = get_cursor_position(obj, ...
+                    cursor_info, ii); 
+                for jj = 1:length(ex_wls)
+                    fitobj = obj.fitdata.fitobjects{idy, idx, jj}; 
+                    color = colors_markers.colors(ii,:)*0.7; 
+                    marker = colors_markers.markers{jj};
+                    fp = plot(fitobj); 
+                    fp.Color = color;
+                    fp.Marker = marker; 
+                    fp.LineWidth = 1.5;
+                    fp.MarkerIndices = 1:markerstep:...
+                        length(fp.XData);
+                end
+            end
+        case 'Excitation'
+            axes(obj.plotwindow.ax_spectrum)
+            hold on
+            for ii=1:length(cursor_info)
+                [~, idx, ~, idy] = get_cursor_position(obj, ...
+                cursor_info, ii); 
+                fitobj = obj.fitdata.fitobjects{idy, idx}; 
+                color = colors_markers.colors(ii,:)*0.7; 
+                fp = plot(fitobj); 
+                fp.Color = color;
+                fp.LineWidth = 1.5;
+            end
+    end
+    hold off
+end
 
 function set_annotation(obj, varargin)
 % Set plot limits based on the type of plot 
@@ -145,6 +209,8 @@ function set_annotation(obj, varargin)
             && not(isempty(varargin))
         legendcell = varargin{1}; 
         legend(obj.plotwindow.ax_spectrum, legendcell);
+    else
+        legend('hide')
     end  
 end
 
