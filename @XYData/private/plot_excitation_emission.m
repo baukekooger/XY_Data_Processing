@@ -120,6 +120,8 @@ function plot_excitation_emission(obj)
         @(src, event)fit_all_button_pushed(obj); 
     obj.datapicker.ColorChartDropDown.ValueChangedFcn = ...
         @(src, event)plottype_changed(obj); 
+    obj.datapicker.SaveButton.ButtonPushedFcn = ...
+        @(src, event)savexy(obj); 
       
     %% call initialization functions. 
     % call the rgb function to plot an initial XY color chart, 

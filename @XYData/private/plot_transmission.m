@@ -78,6 +78,8 @@ function plot_transmission(obj)
         @(src, event)show_fit_button_pushed(obj); 
     obj.datapicker.ColorChartDropDown.ValueChangedFcn = ...
         @(src, event)changed_plottype_rgb(obj); 
+    obj.datapicker.SaveButton.ButtonPushedFcn = ...
+        @(src, event)savexy(obj); 
 
     %% call the plot rgb function to plot an initial XY color chart 
     set_rgb_transmission(obj);
