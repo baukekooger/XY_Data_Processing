@@ -45,8 +45,9 @@ function obj = plot_rgb_transmission(obj)
 
     if size(obj.xystage.coordinates, 1) > 1 && ...
             size(obj.xystage.coordinates, 2) > 1
-        % Plot the colorchart if none exists. flipping the data is necessary 
-        % for correct display. If it exists, update the color data. 
+        % Plot the colorchart if none exists. flipping the data is 
+        % necessary for correct display. If it exists, update the 
+        % color data. 
         colorsurface = findobj(obj.datapicker.UIAxes, 'Type', 'Surface');
         if isempty(colorsurface)
             colorsurface = pcolor(obj.datapicker.UIAxes, x, y, ...
@@ -84,22 +85,32 @@ function obj = plot_rgb_transmission(obj)
     ytickformat(obj.datapicker.UIAxes, '%.1f')
     axis(obj.datapicker.UIAxes, 'image') 
     
-    % Set title if no fitdata is available
-    switch obj.datapicker.ColorChartDropDown.Value
+    % Set title 
+    sample = clean_string(obj.sample); 
+    parameter = obj.datapicker.ColorChartDropDown.Value;
+    switch parameter
         case 'default'
-            rgbtitle = [obj.sample ' - sum of spectrum for ' ...
+            rgbtitle = [sample ' - Sum of spectrum for ' ...
                 'selected timerange'];
         case 'thickness'
-            rgbtitle = [obj.sample '- Thicknes from fit ' ...
+            rgbtitle = [sample '- Thickness from fit ' ...
                 'data (nm).'];
         case 'refractive index (589 nm)'
-            rgbtitle = [obj.sample '- Refractive index at 589 nm from' ...
+            rgbtitle = [sample '- Refractive index at 589 nm from' ...
                 ' fit data.'];
-        case 'extinction coefficient'
-            rgbtitle = [obj.sample '- Extinction coefficient from' ...
-                ' fit data.'];
-        case 'fit quality (adj.rsquare)' 
-            rgbtitle = [obj.sample '- Fit quality (adjusted R-Square)'];
+        case coeffnames(obj.fitdata.fitobjects{1,1})
+            rgbtitle = [sample '- Fitting parameter ' parameter];
+        case 'sse' 
+            rgbtitle = [sample ' - Sum of squares error of fit (SSE)'];
+        case 'rsquare' 
+            rgbtitle = [sample ' - RSquare value of fit'];
+        case 'dfe' 
+            rgbtitle = [sample ' - Degrees of freedom error of fit'];
+        case 'adjrsquare' 
+            rgbtitle = [sample ' - Degrees of freedom ' ...
+                'adjusted RSquare of fit'];
+        case 'rmse' 
+            rgbtitle = [sample ' - Root mean squared error'];
     end
     title(obj.datapicker.UIAxes, rgbtitle)
     hold(obj.datapicker.UIAxes, 'off')
@@ -123,7 +134,8 @@ function obj = plot_rgb_transmission(obj)
     
     if size(obj.xystage.coordinates, 1) > 1 && ...
         size(obj.xystage.coordinates, 2) > 1
-        % plot the colorchart. flipping the data is necessary for correct display
+        % plot the colorchart. flipping the data is necessary for 
+        % correct display
         colorsurface = pcolor(obj.plotwindow.ax_rgb, x, y, ...
             flipud(obj.plotdata.rgb));
         colorsurface.FaceColor = 'interp';

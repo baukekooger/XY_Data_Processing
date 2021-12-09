@@ -31,6 +31,7 @@ function plot_cursor_selection_excitation_emission(obj)
             if obj.datapicker.ShowFitSelectedButton.Value
                 fit_selected(obj, cursor_info); 
                 plot_fits(obj, cursor_info, colors_markers);
+                show_fitdata_table(obj, cursor_info)  
             end
             plot_position_indicators(obj, cursor_info, colors_markers);
             set_annotation(obj, legendcell);
@@ -39,6 +40,7 @@ function plot_cursor_selection_excitation_emission(obj)
             if obj.datapicker.ShowFitSelectedButton.Value
                 fit_selected(obj, cursor_info)
                 plot_fits(obj, cursor_info, colors_markers)
+                show_fitdata_table(obj, cursor_info)  
             end
             plot_position_indicators(obj, cursor_info, colors_markers);
             set_annotation(obj)

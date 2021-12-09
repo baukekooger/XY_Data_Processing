@@ -24,7 +24,7 @@ function plot_cursor_selection_transmission(obj)
     plot_position_indicators(obj, cursor_info, colors_markers);
     if obj.datapicker.ShowFitsButton.Value
         plot_fits(obj, cursor_info, colors_markers);
-%         show_fitdata_table(obj, cursor_info)  
+        show_fitdata_table(obj, cursor_info)  
     end
     set_spectrum_plot_limits(obj);
 

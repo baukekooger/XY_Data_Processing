@@ -6,7 +6,7 @@ function  reset_fitdata(obj)
                 case 'Emission'
                     [ex_wls, ~] = get_excitation_wavelengths(obj); 
                     wlnum = length(ex_wls);
-                case 'Excitation'
+                case {'Excitation', 'Power'}
                     wlnum = 1;
             end
         case 'decay'

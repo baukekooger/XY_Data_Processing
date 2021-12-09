@@ -56,8 +56,6 @@ function obj = fit_selected_points(obj, cursor_info)
     end
 end
 
-
-
 function obj = plot_spectra_decay(obj, cursor_info, colors_markers) 
 % plot the spectra corresponding to the selected position point. 
    

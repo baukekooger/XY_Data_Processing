@@ -79,8 +79,6 @@ function plot_transmission(obj)
     obj.datapicker.ColorChartDropDown.ValueChangedFcn = ...
         @(src, event)changed_plottype_rgb(obj); 
 
-
-
     %% call the plot rgb function to plot an initial XY color chart 
     set_rgb_transmission(obj);
     plot_rgb_transmission(obj);
@@ -176,10 +174,14 @@ function plot_transmission(obj)
             return
         end
         if all(cellfun(@isempty, obj.fitdata.fitobjects), 'all')
+            if not(request_user_optifit_data(obj))
+                enable_gui(obj, 'on')
+                return
+            end
             fit_single_point(obj)
         elseif not(any(cellfun(@isempty, obj.fitdata.fitobjects), 'all'))
             if not(request_user_refit_all)
-                enable_gui('on')
+                enable_gui(obj, 'on')
                 return
             end
         end
