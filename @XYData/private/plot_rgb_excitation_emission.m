@@ -152,8 +152,8 @@ function rgbtitle = make_title(obj, withsample)
     sample = clean_string(obj.sample); 
 
     % No color plot available when either xnum or ynum 1. 
-    if size(obj.xystage.coordinates, 1) < 2 || ...
-        size(obj.xystage.coordinates, 2) < 1
+    if size(obj.xystage.coordinates, 1) == 1 || ...
+        size(obj.xystage.coordinates, 2) == 1
 
         if withsample
             rgbtitle = {[sample ' - sample outline']}; 
