@@ -34,8 +34,8 @@ function read_excitation_emission(obj)
     
     %% Read in all the measurement data
     
-    for x=1:obj.xystage.ynum
-        for y=1:obj.xystage.xnum
+    for y=1:obj.xystage.ynum
+        for x=1:obj.xystage.xnum
             group = sprintf('/x%dy%d/', x, y);
             spectrum = h5read(obj.fname, [group 'spectrum']);
             spectrum = permute(spectrum, [2 1]);

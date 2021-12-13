@@ -109,7 +109,7 @@ function plot_excitation_emission(obj)
     obj.datapicker.ColorMaxEditField.ValueChangedFcn = ...
         @(src, event)color_limits_changed(obj, src, event); 
     obj.datapicker.ResetLimitsButton.ButtonPushedFcn = ...
-        @(src, event)plot_rgb_excitation_emission(obj); 
+        @(src, event)reset_limits_button_pushed(obj); 
     obj.datapicker.SelectBeamsplitterButton.ButtonPushedFcn = ...
         @(src, event)select_beamsplitter(obj); 
     obj.datapicker.FitTypeDropDown.ValueChangedFcn = ...
@@ -122,12 +122,29 @@ function plot_excitation_emission(obj)
         @(src, event)plottype_changed(obj); 
     obj.datapicker.SaveButton.ButtonPushedFcn = ...
         @(src, event)savexy(obj); 
+    obj.datapicker.SizeSpectrumSpinner.ValueChangedFcn = ...
+        @(src, event)change_subplot_ratio(obj); 
+    obj.datapicker.SizeColorChartSpinner.ValueChangedFcn = ...
+        @(src, event)change_subplot_ratio(obj); 
+    obj.datapicker.ContoursCheckBox.ValueChangedFcn = ...
+        @(src, event)plot_contours(obj); 
+    obj.datapicker.ColorBarCheckBox.ValueChangedFcn = ...
+        @(src, event)plot_colorbar(obj); 
+    obj.datapicker.LevelsSpinner.ValueChangedFcn = ...
+        @(src, event)plot_contours(obj); 
+    obj.datapicker.GridCheckBox.ValueChangedFcn = ...
+        @(src, event)plot_grid(obj); 
+    obj.datapicker.SavePlotButton.ButtonPushedFcn = ...
+        @(src, event)save_plot(obj); 
       
     %% call initialization functions. 
     % call the rgb function to plot an initial XY color chart, 
     % set the initial fit type
     set_rgb_excitation_emission(obj);
     plot_rgb_excitation_emission(obj);
+    plot_contours(obj);
+    plot_colorbar(obj); 
+    plot_grid(obj); 
     set_fittype_excitation_emission(obj); 
 
     %% define sequenced callbacks
@@ -157,17 +174,21 @@ function plot_excitation_emission(obj)
         % Set the correction options, these are different for when power is
         % selected. 
         set_correction_options(obj, event); 
-        reset_fitdata(obj); 
         set_spectra(obj); 
     end
 
     function set_spectra(obj)
-        % Set the spectra with the settings from the ui, replot the color
-        % charts and the cursor selection for the new spectra.
+        % Set the spectra with the settings from the ui. Reset the present
+        % fitdata. Replot the color charts and the cursor selection for 
+        % the new spectra.
+        reset_fitdata(obj);
+        set_plotmethods_fitted_data(obj); 
         set_spectra_excitation_emission(obj);
         set_rgb_excitation_emission(obj);
         plot_rgb_excitation_emission(obj);
-        reset_fitdata(obj)
+        plot_colorbar(obj)
+        plot_grid(obj)
+        plot_contours(obj) 
         plot_cursor_selection_excitation_emission(obj);
     end
 
@@ -175,13 +196,13 @@ function plot_excitation_emission(obj)
         if not(check_range_spinner(obj, src, event))
             return
         end
-        select_nearest_wavelength(obj, src) 
-        draw_lines_wavelength_range(obj, src)
+        select_nearest_wavelength(obj, src);
+        draw_lines_wavelength_range(obj, src);
     end
 
     function reset_wavelength_range(obj)
-        reset_wavelengths(obj)
-        set_spectra(obj) 
+        reset_wavelengths(obj);
+        set_spectra(obj);
     end
 
     function color_limits_changed(obj, src, event)
@@ -190,6 +211,9 @@ function plot_excitation_emission(obj)
             return
         end  
         update_color_limits(obj) 
+        plot_colorbar(obj);
+        plot_grid(obj);
+        plot_contours(obj);
     end
 
     function select_beamsplitter(obj)
@@ -200,7 +224,12 @@ function plot_excitation_emission(obj)
 
     function fittype_changed(obj)
         reset_fitdata(obj); 
+        set_plotmethods_fitted_data(obj); 
         set_fittype_excitation_emission(obj); 
+        plot_rgb_excitation_emission(obj);
+        plot_colorbar(obj);
+        plot_grid(obj);
+        plot_contours(obj); 
         plot_cursor_selection_excitation_emission(obj);
     end
 
@@ -214,7 +243,17 @@ function plot_excitation_emission(obj)
     function plottype_changed(obj)
        set_rgb_excitation_emission(obj) ;
        plot_rgb_excitation_emission(obj);
+       plot_colorbar(obj)
+       plot_grid(obj)
+       plot_contours(obj) 
        plot_cursor_selection_excitation_emission(obj);
+    end
+
+    function reset_limits_button_pushed(obj)
+        plot_rgb_excitation_emission(obj)
+        plot_colorbar(obj)
+        plot_grid(obj)
+        plot_contours(obj) 
     end
 
 end

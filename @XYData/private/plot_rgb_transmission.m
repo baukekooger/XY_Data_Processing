@@ -15,7 +15,7 @@ function obj = plot_rgb_transmission(obj)
         x = x - min(x, [], 'all');
         x = x + offset_left; 
     else
-        x = sample_width/2 + offset_left - offset_right; 
+        x = sample_width/2 + offset_left/2 - offset_right/2; 
     end
     
     if obj.xystage.ynum > 1
@@ -23,9 +23,14 @@ function obj = plot_rgb_transmission(obj)
         y = y - min(y, [], 'all'); 
         y = y + offset_bottom; 
     else
-        y = sample_height/2 + offset_bottom - offset_top; 
+        y = sample_height/2 + offset_bottom/2 - offset_top/2; 
     end
-    
+
+    if obj.xystage.xnum == 1 || obj.xystage.ynum == 1
+        [x, y] = meshgrid(x, y); 
+    end
+    x = double(x); 
+    y = double(y); 
     obj.plotdata.xy_coordinates = cat(3, x, y); 
     
     %% plot the xy chart on the datapicker window
@@ -77,41 +82,17 @@ function obj = plot_rgb_transmission(obj)
     end
     
     % Format axes
-    obj.datapicker.UIAxes.XTick = [0; unique(x); sample_width]; 
-    obj.datapicker.UIAxes.YTick =  [0; unique(y); sample_height];
+    xunique = reshape(unique(x), 1, []); 
+    yunique = reshape(unique(y), 1, []); 
+    obj.datapicker.UIAxes.XTick = [0, xunique, sample_width]; 
+    obj.datapicker.UIAxes.YTick =  [0, yunique, sample_height];
     obj.datapicker.UIAxes.XLim =  [0 sample_width];
     obj.datapicker.UIAxes.YLim =  [0 sample_height]; 
     xtickformat(obj.datapicker.UIAxes, '%.1f')
     ytickformat(obj.datapicker.UIAxes, '%.1f')
     axis(obj.datapicker.UIAxes, 'image') 
     
-    % Set title 
-    sample = clean_string(obj.sample); 
-    parameter = obj.datapicker.ColorChartDropDown.Value;
-    switch parameter
-        case 'default'
-            rgbtitle = [sample ' - Sum of spectrum for ' ...
-                'selected timerange'];
-        case 'thickness'
-            rgbtitle = [sample '- Thickness from fit ' ...
-                'data (nm).'];
-        case 'refractive index (589 nm)'
-            rgbtitle = [sample '- Refractive index at 589 nm from' ...
-                ' fit data.'];
-        case coeffnames(obj.fitdata.fitobjects{1,1})
-            rgbtitle = [sample '- Fitting parameter ' parameter];
-        case 'sse' 
-            rgbtitle = [sample ' - Sum of squares error of fit (SSE)'];
-        case 'rsquare' 
-            rgbtitle = [sample ' - RSquare value of fit'];
-        case 'dfe' 
-            rgbtitle = [sample ' - Degrees of freedom error of fit'];
-        case 'adjrsquare' 
-            rgbtitle = [sample ' - Degrees of freedom ' ...
-                'adjusted RSquare of fit'];
-        case 'rmse' 
-            rgbtitle = [sample ' - Root mean squared error'];
-    end
+    rgbtitle = maketitle(obj, true); 
     title(obj.datapicker.UIAxes, rgbtitle)
     hold(obj.datapicker.UIAxes, 'off')
     
@@ -141,7 +122,58 @@ function obj = plot_rgb_transmission(obj)
         colorsurface.FaceColor = 'interp';
         caxis(obj.plotwindow.ax_rgb, 'auto')
     end
-
     axis(obj.plotwindow.ax_rgb, 'image') 
+    xlabel('x (mm)')
+    ylabel('y (mm)')
+
+    rgbtitle = maketitle(obj, false); 
+    title(obj.plotwindow.ax_rgb, rgbtitle); 
+
     hold(obj.plotwindow.ax_rgb, 'off')
+end
+
+function rgbtitle = maketitle(obj, withsample)
+    % Set title for the color charts. 
+    sample = clean_string(obj.sample); 
+
+    % No color plot available when either xnum or ynum 1. 
+    if size(obj.xystage.coordinates, 1) < 2 || ...
+        size(obj.xystage.coordinates, 2) < 1
+
+        if withsample
+            rgbtitle = {[sample ' - sample outline']}; 
+        else
+            rgbtitle = 'Sample outline'; 
+        end
+        return
+    end
+    
+    parameter = obj.datapicker.ColorChartDropDown.Value;
+    switch parameter
+        case 'default'
+            rgbtitle = {[sample ' - Sum of spectrum']};
+        case 'thickness'
+            rgbtitle = {[sample ' - Thickness (nm)']};
+        case 'refractive index (589 nm)'
+            rgbtitle = {[sample ' - Refractive index'], ...
+                'at 589 nm'};
+        case coeffnames(obj.fitdata.fitobjects{1,1})
+            rgbtitle = {[sample '- Fitting parameter ' parameter]};
+        case 'sse' 
+            rgbtitle = {[sample ' - Sum of squared'],  ' error (SSE)'};
+        case 'rsquare' 
+            rgbtitle = {[sample ' - RSquare value'], 'of fit'};
+        case 'dfe' 
+            rgbtitle = {[sample ' - Degrees of'], 'freedom error '};
+        case 'adjrsquare' 
+            rgbtitle = {[sample ' - Degrees of freedom'], ...
+                'adjusted RSquare of fit'};
+        case 'rmse' 
+            rgbtitle = {[sample ' - Root mean'] , 'squared error'};
+    end
+
+    if not(withsample)
+        rgbtitle = erase(rgbtitle, [sample ' - ']); 
+        rgbtitle{1}(1) = upper(rgbtitle{1}(1)); 
+    end
 end

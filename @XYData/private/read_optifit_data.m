@@ -1,4 +1,4 @@
-function read_optifit_data(obj)
+function passed = read_optifit_data(obj)
 % Read the optifit output data and fitparameters and store them in the
 % object. 
 % Note, the optifit filenames must not be altered. 
@@ -7,6 +7,11 @@ function read_optifit_data(obj)
     fname = uigetfile('*.dat', ['select optifit datafile - ' ...
     'fitparam file should be in same folder']);
 
+    if not(fname)
+        passed = false;
+        return
+    end
+    
     data = importdata(fname); 
     xpoint = extractBetween(fname, '_x', '_y'); 
     ypoint = extractBetween(fname, '_y', '_Data');
@@ -34,5 +39,6 @@ function read_optifit_data(obj)
     obj.fitdata.optifit_data.fitparams = ...
         cell2struct(fitparams.textdata(:,2), names); 
 
+    passed =  true; 
 end
 

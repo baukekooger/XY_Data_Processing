@@ -15,7 +15,7 @@ function obj = plot_rgb_excitation_emission(obj)
         x = x - min(x, [], 'all');
         x = x + offset_left; 
     else
-        x = sample_width/2 + offset_left - offset_right; 
+        x = sample_width/2 + offset_left/2 - offset_right/2; 
     end
     
     if obj.xystage.ynum > 1
@@ -23,9 +23,14 @@ function obj = plot_rgb_excitation_emission(obj)
         y = y - min(y, [], 'all'); 
         y = y + offset_bottom; 
     else
-        y = sample_height/2 + offset_bottom - offset_top; 
+        y = sample_height/2 + offset_bottom/2 - offset_top/2; 
     end
     
+    if obj.xystage.xnum == 1 || obj.xystage.ynum == 1
+        [x, y] = meshgrid(x, y); 
+    end
+    x = double(x); 
+    y = double(y); 
     obj.plotdata.xy_coordinates = cat(3, x, y); 
 
     %% plot the xy chart on the datapicker window
@@ -40,7 +45,6 @@ function obj = plot_rgb_excitation_emission(obj)
             'FaceColor', [0.8431, 0.9451, 0.9804]);
     end 
     
-
     % Plot the colorchart for measurements where both x and y have a 
     % minimum of two points. 
 
@@ -59,7 +63,6 @@ function obj = plot_rgb_excitation_emission(obj)
             colorsurface.CData = flipud(obj.plotdata.rgb);  
         end
             % Set limits in the colorplot and also in the edit fields
-        colorbar(obj.datapicker.UIAxes)
         mincolor = min(colorsurface.CData, [], "all"); 
         maxcolor = max(colorsurface.CData, [], "all"); 
         if mincolor == maxcolor
@@ -70,7 +73,7 @@ function obj = plot_rgb_excitation_emission(obj)
         obj.datapicker.ColorMinEditField.Value = mincolor; 
         obj.datapicker.ColorMaxEditField.Value = maxcolor; 
     end
-    
+
     % Plot the measurement points if none are available
     if isempty(findobj(obj.datapicker.UIAxes, 'Type', 'Line'))
         plot(obj.datapicker.UIAxes, x, y, 'o', 'MarkerFaceColor', ...
@@ -78,52 +81,18 @@ function obj = plot_rgb_excitation_emission(obj)
     end
     
     % Format axes
-    obj.datapicker.UIAxes.XTick = [0; unique(x); sample_width]; 
-    obj.datapicker.UIAxes.YTick =  [0; unique(y); sample_height];
+    xunique = reshape(unique(x), 1, []); 
+    yunique = reshape(unique(y), 1, []); 
+    obj.datapicker.UIAxes.XTick = [0, xunique, sample_width]; 
+    obj.datapicker.UIAxes.YTick =  [0, yunique, sample_height];
     obj.datapicker.UIAxes.XLim =  [0 sample_width];
     obj.datapicker.UIAxes.YLim =  [0 sample_height]; 
     xtickformat(obj.datapicker.UIAxes, '%.1f')
     ytickformat(obj.datapicker.UIAxes, '%.1f')
     axis(obj.datapicker.UIAxes, 'image') 
     
-    % Set title if no fitdata is available
-    sample = clean_string(obj.sample); 
-    parameter = obj.datapicker.ColorChartDropDown.Value;
-    switch parameter
-        case 'default'
-            rgbtitle = [sample ' - sum of spectrum for ' ...
-                'selected timerange'];
-        case coeffnames(obj.fitdata.fitobjects{1,1,1})
-            if strcmp(parameter, 'a')
-                rgbtitle = [sample ' - Amplitude of fitted gaussian']; 
-            elseif contains(parameter, 'a')
-                rgbtitle = [sample ' - Amplitude of fitted ' ...
-                    'gaussian ' erase(parameter, 'a')];
-            elseif strcmp(parameter, 'b')
-                rgbtitle = [sample ' - Peak wavelength of ' ...
-                    'fitted gaussian']; 
-            elseif contains(parameter, 'b')
-                rgbtitle = [sample ' - Peak wavelength of fitted ' ...
-                    'gaussian ' erase(parameter, 'b')];
-            elseif strcmp(parameter, 'c')
-                rgbtitle = [sample ' - Peak width (nm) of ' ...
-                    'fitted gaussian']; 
-            elseif contains(parameter, 'c')
-                rgbtitle = [sample ' - Peak width (nm) of fitted ' ...
-                    'gaussian ' erase(parameter, 'b')];
-            end
-        case 'sse' 
-            rgbtitle = [sample ' - Sum of squares error of fit (SSE)'];
-        case 'rsquare' 
-            rgbtitle = [sample ' - RSquare value of fit'];
-        case 'dfe' 
-            rgbtitle = [sample ' - Degrees of freedom error of fit'];
-        case 'adjrsquare' 
-            rgbtitle = [sample ' - Degrees of freedom ' ...
-                'adjusted RSquare of fit'];
-        case 'rmse' 
-            rgbtitle = [sample ' - Root mean squared error'];
-    end
+    % Set title. 
+    rgbtitle = make_title(obj, true); 
     title(obj.datapicker.UIAxes, rgbtitle)
     
     % Add subtitle if multiple excitation wavelengths are chosen.
@@ -166,7 +135,74 @@ function obj = plot_rgb_excitation_emission(obj)
         caxis(obj.plotwindow.ax_rgb, 'auto')
         
     end
+    xlabel('x (mm)')
+    ylabel('y (mm)')
+    
+    % Set title. 
+    rgbtitle = make_title(obj, false); 
+    title(obj.plotwindow.ax_rgb, rgbtitle)
 
     axis(obj.plotwindow.ax_rgb, 'image') 
     hold(obj.plotwindow.ax_rgb, 'off')
+end
+
+function rgbtitle = make_title(obj, withsample)
+% Set the title based on the current setting for the rgb plot. 
+
+    sample = clean_string(obj.sample); 
+
+    % No color plot available when either xnum or ynum 1. 
+    if size(obj.xystage.coordinates, 1) < 2 || ...
+        size(obj.xystage.coordinates, 2) < 1
+
+        if withsample
+            rgbtitle = {[sample ' - sample outline']}; 
+        else
+            rgbtitle = 'Sample outline'; 
+        end
+        return
+    end
+
+    parameter = obj.datapicker.ColorChartDropDown.Value;
+    switch parameter
+        case 'default'
+            rgbtitle = {[sample ' - sum of spectrum']};
+        case coeffnames(obj.fitdata.fitobjects{1,1,1})
+            if strcmp(parameter, 'a')
+                rgbtitle = {[sample ' - Amplitude of'], 'fitted gaussian'}; 
+            elseif contains(parameter, 'a')
+                rgbtitle = {[sample ' - Amplitude of'], [' fitted '...
+                    'gaussian ' erase(parameter, 'a')]};
+            elseif strcmp(parameter, 'b')
+                rgbtitle = {[sample ' - Peak wavelength of '], ...
+                    'fitted gaussian'}; 
+            elseif contains(parameter, 'b')
+                rgbtitle = {[sample ' - Peak wavelength of'], ...
+                    [' fitted gaussian ' erase(parameter, 'b')]};
+            elseif strcmp(parameter, 'c')
+                rgbtitle = {[sample ' - Peak width (nm) of '], ...
+                    'fitted gaussian'}; 
+            elseif contains(parameter, 'c')
+                rgbtitle = {[sample ' - Peak width (nm) of '], ...
+                    ['fitted gaussian ' erase(parameter, 'b')]};
+            end
+        case 'sse' 
+            rgbtitle = {[sample ' - Sum of squared'], ...
+                ' error of fit (SSE)'};
+        case 'rsquare' 
+            rgbtitle = {[sample ' - RSquare value'], 'of fit'};
+        case 'dfe' 
+            rgbtitle = {[sample ' - Degrees of freedom'], ...
+                ' error of fit'};
+        case 'adjrsquare' 
+            rgbtitle = {[sample ' - Degrees of freedom '], ...
+                'adjusted RSquare of fit'};
+        case 'rmse' 
+            rgbtitle = {[sample ' - Root mean squared error']};
+    end
+
+    if not(withsample)
+        rgbtitle = erase(rgbtitle, [sample ' - ']); 
+        rgbtitle{1}(1) = upper(rgbtitle{1}(1)); 
+    end
 end

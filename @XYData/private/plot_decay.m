@@ -76,13 +76,27 @@ obj.datapicker.ColorMinEditField.ValueChangedFcn = ...
 obj.datapicker.ColorMaxEditField.ValueChangedFcn = ...
     @(src, event)color_limits_changed(obj, src, event); 
 obj.datapicker.ResetLimitsButton.ButtonPushedFcn = ...
-    @(src, event)plot_rgb_decay(obj); 
+    @(src, event)plot_color_chart(obj); 
 obj.datapicker.SaveButton.ButtonPushedFcn = ...
     @(src, event)savexy(obj); 
+obj.datapicker.SizeSpectrumSpinner.ValueChangedFcn = ...
+    @(src, event)change_subplot_ratio(obj); 
+obj.datapicker.SizeColorChartSpinner.ValueChangedFcn = ...
+    @(src, event)change_subplot_ratio(obj); 
+obj.datapicker.ContoursCheckBox.ValueChangedFcn = ...
+    @(src, event)plot_contours(obj); 
+obj.datapicker.ColorBarCheckBox.ValueChangedFcn = ...
+    @(src, event)plot_colorbar(obj); 
+obj.datapicker.LevelsSpinner.ValueChangedFcn = ...
+    @(src, event)plot_contours(obj); 
+obj.datapicker.GridCheckBox.ValueChangedFcn = ...
+    @(src, event)plot_grid(obj); 
+obj.datapicker.SavePlotButton.ButtonPushedFcn = ...
+    @(src, event)save_plot(obj); 
 
 %% call the plot rgb function to plot an initial XY color chart 
 set_rgb_decay(obj);
-plot_rgb_decay(obj);
+plot_color_chart(obj);
 fittype_changed_decay(obj); 
 
 
@@ -112,7 +126,7 @@ fittype_changed_decay(obj);
         reset_fitdata(obj);
         set_plotmethods_fitted_data(obj);
         set_rgb_decay(obj); 
-        plot_rgb_decay(obj);
+        plot_color_chart(obj); 
         plot_cursor_selection_decay(obj);
     end
 
@@ -122,7 +136,7 @@ fittype_changed_decay(obj);
         reset_fitdata(obj);
         set_plotmethods_fitted_data(obj);
         set_rgb_decay(obj);
-        plot_rgb_decay(obj);
+        plot_color_chart(obj);
         plot_cursor_selection_decay(obj);
     end
 
@@ -132,13 +146,13 @@ fittype_changed_decay(obj);
         reset_fitdata(obj);
         set_plotmethods_fitted_data(obj);
         set_rgb_decay(obj);
-        plot_rgb_decay(obj);
+        plot_color_chart(obj);
         plot_cursor_selection_decay(obj);
     end
 
     function plottype_changed(obj)
        set_rgb_decay(obj) ;
-       plot_rgb_decay(obj);
+       plot_color_chart(obj);
        plot_cursor_selection_decay(obj);
     end
 
@@ -155,7 +169,10 @@ fittype_changed_decay(obj);
         if not(check_color_limits(obj, src, event))
             return
         end  
-        update_color_limits(obj) 
+        update_color_limits(obj);
+        plot_contours(obj);
+        plot_colorbar(obj); 
+        plot_grid(obj);
     end
 
     function fittype_changed_decay(obj)
@@ -163,8 +180,15 @@ fittype_changed_decay(obj);
         reset_fitdata(obj); 
         set_plotmethods_fitted_data(obj);
         set_rgb_decay(obj);
-        plot_rgb_decay(obj);
+        plot_color_chart(obj);
         plot_cursor_selection_decay(obj)
+    end
+
+    function plot_color_chart(obj)
+        plot_rgb_decay(obj); 
+        plot_contours(obj);
+        plot_colorbar(obj); 
+        plot_grid(obj);
     end
 
 end
