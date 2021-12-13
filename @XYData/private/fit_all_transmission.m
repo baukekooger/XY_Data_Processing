@@ -18,7 +18,7 @@ function fit_all_transmission(obj)
 
     % Fill downwards
     for ii = (y0+1):ynum
-        fprintf('y=%d\n',ii);
+%         fprintf('y=%d\n',ii);
         active_area = ((xinx == x0) & (yinx == ii-1));
         [fitresult, gof] = ...
             fit_procedure_transmission(obj, ii, x0, active_area);
@@ -30,7 +30,7 @@ function fit_all_transmission(obj)
     end    
     % Fill upwards
     for ii= (y0-1):-1:1
-        fprintf('y=%d\n',ii);
+%         fprintf('y=%d\n',ii);
         active_area = (xinx == x0) & (yinx == ii+1);
         [fitresult, gof] = ...
             fit_procedure_transmission(obj, ii, x0, active_area);
@@ -44,7 +44,7 @@ function fit_all_transmission(obj)
     for ii=1:ynum
         % Fill to the right
         for jj=(x0+1):xnum
-            fprintf('x,y=%d,%d\n',jj,ii);
+%             fprintf('x,y=%d,%d\n',jj,ii);
             active_area = (xinx == jj-1) & (yinx == ii);
             [fitresult, gof] = ...
                 fit_procedure_transmission(obj, ii, jj, active_area);
@@ -56,7 +56,7 @@ function fit_all_transmission(obj)
         end
         % Fill to the left
         for jj=(x0-1):-1:1
-            fprintf('x,y=%d,%d\n',jj,ii);
+%             fprintf('x,y=%d,%d\n',jj,ii);
             active_area = (xinx == jj+1) & (yinx == ii);
             [fitresult, gof] = ...
                 fit_procedure_transmission(obj, ii, jj, active_area);

@@ -67,7 +67,7 @@ function plot_transmission(obj)
     obj.datapicker.ColorMaxEditField.ValueChangedFcn = ...
         @(src, event)color_limits_changed(obj, src, event); 
     obj.datapicker.ResetLimitsButton.ButtonPushedFcn = ...
-        @(src, event)plot_rgb_transmission(obj); 
+        @(src, event)plot_color_chart(obj); 
     obj.datapicker.ImportOptifitDataButton.ButtonPushedFcn = ...
         @(src, event)read_optifit_data(obj); 
     obj.datapicker.FitSinglePointButton.ButtonPushedFcn = ...
@@ -80,10 +80,24 @@ function plot_transmission(obj)
         @(src, event)changed_plottype_rgb(obj); 
     obj.datapicker.SaveButton.ButtonPushedFcn = ...
         @(src, event)savexy(obj); 
+    obj.datapicker.SizeSpectrumSpinner.ValueChangedFcn = ...
+        @(src, event)change_subplot_ratio(obj); 
+    obj.datapicker.SizeColorChartSpinner.ValueChangedFcn = ...
+        @(src, event)change_subplot_ratio(obj); 
+    obj.datapicker.ContoursCheckBox.ValueChangedFcn = ...
+        @(src, event)plot_contours(obj); 
+    obj.datapicker.ColorBarCheckBox.ValueChangedFcn = ...
+        @(src, event)plot_colorbar(obj); 
+    obj.datapicker.LevelsSpinner.ValueChangedFcn = ...
+        @(src, event)plot_contours(obj); 
+    obj.datapicker.GridCheckBox.ValueChangedFcn = ...
+        @(src, event)plot_grid(obj); 
+    obj.datapicker.SavePlotButton.ButtonPushedFcn = ...
+        @(src, event)save_plot(obj); 
 
     %% call the plot rgb function to plot an initial XY color chart 
     set_rgb_transmission(obj);
-    plot_rgb_transmission(obj);
+    plot_color_chart(obj);
     set_plotmethods_fitted_data(obj);
     
     %% define sequenced callbacks
@@ -122,14 +136,14 @@ function plot_transmission(obj)
     function wrapper_spectra_type_changed(obj)
         set_spectra_transmission(obj);
         set_rgb_transmission(obj);
-        plot_rgb_transmission(obj);
+        plot_color_chart(obj);
         plot_cursor_selection_transmission(obj);
     end
 
     function set_wavelength_range(obj)
         set_spectra_transmission(obj); 
         set_rgb_transmission(obj); 
-        plot_rgb_transmission(obj); 
+        plot_color_chart(obj); 
         plot_cursor_selection_transmission(obj); 
     end
 
@@ -205,7 +219,14 @@ function plot_transmission(obj)
     function changed_plottype_rgb(obj)
         % change the rgb data for the color plot. 
         set_rgb_transmission(obj);
-        plot_rgb_transmission(obj);
+        plot_color_chart(obj);
+    end
+
+    function plot_color_chart(obj)
+        plot_rgb_transmission(obj); 
+        plot_contours(obj);
+        plot_colorbar(obj); 
+        plot_grid(obj);
     end
 
 end

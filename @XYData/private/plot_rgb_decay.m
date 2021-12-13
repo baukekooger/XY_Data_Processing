@@ -15,7 +15,7 @@ function plot_rgb_decay(obj)
         x = x - min(x, [], 'all');
         x = x + offset_left; 
     else
-        x = sample_width/2 + offset_left - offset_right; 
+        x = sample_width/2 + offset_left/2 - offset_right/2; 
     end
     
     if obj.xystage.ynum > 1
@@ -23,9 +23,14 @@ function plot_rgb_decay(obj)
         y = y - min(y, [], 'all'); 
         y = y + offset_bottom; 
     else
-        y = sample_height/2 + offset_bottom - offset_top; 
+        y = sample_height/2 + offset_bottom/2 - offset_top/2; 
     end
-    
+
+    if obj.xystage.xnum == 1 || obj.xystage.ynum == 1
+        [x, y] = meshgrid(x, y); 
+    end
+    x = double(x); 
+    y = double(y); 
     obj.plotdata.xy_coordinates = cat(3, x, y); 
 
     %% plot the xy chart on the datapicker window
@@ -73,8 +78,10 @@ function plot_rgb_decay(obj)
             'w', 'MarkerEdgeColor','k'); 
     end
     
-    obj.datapicker.UIAxes.XTick = [0; unique(x); sample_width]; 
-    obj.datapicker.UIAxes.YTick =  [0; unique(y); sample_height];
+    xunique = reshape(unique(x), 1, []); 
+    yunique = reshape(unique(y), 1, []); 
+    obj.datapicker.UIAxes.XTick = [0, xunique, sample_width]; 
+    obj.datapicker.UIAxes.YTick =  [0, yunique, sample_height];
     obj.datapicker.UIAxes.XLim =  [0 sample_width];
     obj.datapicker.UIAxes.YLim =  [0 sample_height]; 
     xtickformat(obj.datapicker.UIAxes, '%.1f')
@@ -83,39 +90,17 @@ function plot_rgb_decay(obj)
     
     % Set title if no fitdata is available
 
-    sample = clean_string(obj.sample);
-    switch obj.datapicker.ColorChartDropDown.Value
-        case 'default'
-            rgbtitle = [sample ' - sum of spectrum for ' ...
-                'selected timerange'];
-        case 'C'
-            rgbtitle = [sample ' - Fit parameter C'];
-        case 'C1'
-            rgbtitle = [sample ' - Fit parameter C1'];
-        case 'C2'
-            rgbtitle = [sample ' - Fit parameter C2'];
-        case 'tau'
-            rgbtitle = [sample ' - Decay time constant ' ...
-                '\tau from fit (\mus)'];
-        case 'tau_1' 
-            rgbtitle = [sample ' - Decay time constant \tau_1 ' ...
-                'from fit (\mus)'];
-        case 'tau_2' 
-            rgbtitle = [sample ' - Decay time constant \tau_2 ' ...
-                'from fit (\mus)'];
-        case 'sse' 
-            rgbtitle = [sample ' - Sum of squares error of fit (SSE)'];
-        case 'rsquare' 
-            rgbtitle = [sample ' - RSquare value of fit'];
-        case 'dfe' 
-            rgbtitle = [sample ' - Degrees of freedom error of fit'];
-        case 'adjrsquare' 
-            rgbtitle = [sample ' - Degrees of freedom ' ...
-                'adjusted RSquare of fit'];
-        case 'rmse' 
-            rgbtitle = [sample ' - Root mean squared error'];
-    end
+    rgbtitle = maketitle(obj, true); 
     title(obj.datapicker.UIAxes, rgbtitle)
+
+    % Add subtitle if multiple excitation wavelengths are chosen.
+    if length(obj.datapicker.ExcitationWavelengthsListBox.Value) > 1
+        subtitle(obj.datapicker.UIAxes, ...
+            ['Multiple excitation wavelengths, ' ...
+            'color plot shows average']);
+    else
+        subtitle(obj.datapicker.UIAxes, '');
+    end
     
     hold(obj.datapicker.UIAxes, 'off')
     
@@ -143,10 +128,67 @@ function plot_rgb_decay(obj)
             flipud(obj.plotdata.rgb));
         colorsurface.FaceColor = 'interp';
         caxis(obj.plotwindow.ax_rgb, 'auto')
-        axis(obj.plotwindow.ax_rgb, 'image') 
     end
-    
+    xlabel('x (mm)')
+    ylabel('y (mm)')
+    axis(obj.plotwindow.ax_rgb, 'image') 
+
+    rgbtitle = maketitle(obj, false); 
+    title(obj.plotwindow.ax_rgb, rgbtitle)
+
     hold(obj.plotwindow.ax_rgb, 'off')
 
 end
 
+function rgbtitle = maketitle(obj, withsample)
+
+    sample = clean_string(obj.sample);
+
+    % No color plot available when either xnum or ynum 1. 
+    if size(obj.xystage.coordinates, 1) == 1 || ...
+        size(obj.xystage.coordinates, 2) == 1
+
+        if withsample
+            rgbtitle = {[sample ' - sample outline']}; 
+        else
+            rgbtitle = 'Sample outline'; 
+        end
+        return
+    end
+    
+    switch obj.datapicker.ColorChartDropDown.Value
+        case 'default'
+            rgbtitle = {[sample ' - sum of spectrum']};
+        case 'C'
+            rgbtitle = {[sample ' - Fit parameter C']};
+        case 'C1'
+            rgbtitle = {[sample ' - Fit parameter C1']};
+        case 'C2'
+            rgbtitle = {[sample ' - Fit parameter C2']};
+        case 'tau'
+            rgbtitle = {[sample ' - time constant '], ...
+                '\tau from fit (\mus)'};
+        case 'tau_1' 
+            rgbtitle = {[sample ' - time constant '], ['\tau_1 ' ...
+                'from fit (\mus)']};
+        case 'tau_2' 
+            rgbtitle = {[sample ' - time constant '], ['\tau_2 ' ...
+                'from fit (\mus)']};
+        case 'sse' 
+            rgbtitle = {[sample ' - Sum of squared'],  ' error (SSE)'};
+        case 'rsquare' 
+            rgbtitle = {[sample ' - RSquare value'], 'of fit'};
+        case 'dfe' 
+            rgbtitle = {[sample ' - Degrees of'], 'freedom error '};
+        case 'adjrsquare' 
+            rgbtitle = {[sample ' - Degrees of freedom'], ...
+                'adjusted RSquare of fit'};
+        case 'rmse' 
+            rgbtitle = {[sample ' - Root mean'] , 'squared error'};
+    end
+
+    if not(withsample)
+        rgbtitle = erase(rgbtitle, [sample ' - ']); 
+        rgbtitle{1}(1) = upper(rgbtitle{1}(1)); 
+    end
+end

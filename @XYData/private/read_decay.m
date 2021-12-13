@@ -4,15 +4,15 @@ function read_decay(obj)
 
 %% Set required variables
 % read the size of the variable dimensions. 
-finfo = h5info(obj.fname);
-dimnames = {finfo.Datasets.Name};
-dimsizes = cellfun(@(x)(x.Size),{finfo.Datasets.Dataspace});
-excitation_wavelengths = dimsizes(strcmp('excitation_wavelengths', ...
-    dimnames));
-samples = dimsizes(strcmp('samples', dimnames));
+% finfo = h5info(obj.fname);
+% dimnames = {finfo.Datasets.Name};
+% dimsizes = cellfun(@(x)(x.Size),{finfo.Datasets.Dataspace});
+% excitation_wavelengths = dimsizes(strcmp('excitation_wavelengths', ...
+%     dimnames));
+% samples = dimsizes(strcmp('samples', dimnames));
 
 obj.digitizer.spectra = NaN(obj.xystage.ynum, obj.xystage.xnum, ...
-    excitation_wavelengths, samples);
+    obj.laser.wlnum, obj.digitizer.samples);
 obj.xystage.coordinates = NaN(obj.xystage.ynum, obj.xystage.xnum, 2);
 
 samples = double(obj.digitizer.samples);

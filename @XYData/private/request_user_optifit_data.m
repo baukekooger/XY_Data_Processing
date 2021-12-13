@@ -13,8 +13,7 @@ function passed = request_user_optifit_data(obj)
         case 'Select file'
             close(fig)
             clear('fig')
-            read_optifit_data(obj); 
-            passed = true; 
+            passed = read_optifit_data(obj); 
             return
         case 'Continue without fitting'
             close(fig)
