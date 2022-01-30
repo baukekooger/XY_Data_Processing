@@ -73,11 +73,11 @@ function plot_excitation_emission(obj)
        
     %% connect ui elements 
     obj.datapicker.SpectraDropDown.ValueChangedFcn = ...
-        @(src, event)spectra_changed(obj, event);
+        @(src, event)spectra_changed(obj, src, event);
     obj.datapicker.CorrectionDropDown.ValueChangedFcn = ...
-        @(src, event)set_spectra(obj);
+        @(src, event)set_spectra(obj, src, event);
     obj.datapicker.SetSpectraButton.ButtonPushedFcn = ...
-        @(src, event)set_spectra(obj);
+        @(src, event)set_spectra(obj, src, event);
     obj.datapicker.MinWavelengthSpinner.ValueChangedFcn = ...
         @(src, event)range_changed_spinner(obj, src, event); 
     obj.datapicker.MaxWavelengthSpinner.ValueChangedFcn = ...
@@ -99,7 +99,7 @@ function plot_excitation_emission(obj)
     obj.datapicker.ClickMaxExWavelengthCheckBox.ValueChangedFcn = ...
         @(src, event)assert_checkboxes_wavelength(obj, src); 
     obj.datapicker.ResetRangesButton.ButtonPushedFcn = ...
-        @(src, event)reset_wavelength_range(obj); 
+        @(src, event)reset_wavelength_range(obj, src, event); 
     obj.datapicker.PlotDarkSpectrumButton.ButtonPushedFcn = ...
         @(src, event)plot_darkspectrum(obj); 
     obj.datapicker.PlotBeamsplitterCalibrationButton.ButtonPushedFcn = ...
@@ -170,17 +170,20 @@ function plot_excitation_emission(obj)
         draw_lines_wavelength_range(obj, src);
     end
 
-    function spectra_changed(obj, event)
+    function spectra_changed(obj, src, event)
         % Set the correction options, these are different for when power is
         % selected. 
         set_correction_options(obj, event); 
-        set_spectra(obj); 
+        set_spectra(obj, src, event); 
     end
 
-    function set_spectra(obj)
+    function set_spectra(obj, src, event)
         % Set the spectra with the settings from the ui. Reset the present
         % fitdata. Replot the color charts and the cursor selection for 
         % the new spectra.
+        if not(check_beamsplitter_excitation_wavelengths(obj, src, event))
+            return
+        end
         reset_fitdata(obj);
         set_plotmethods_fitted_data(obj); 
         set_spectra_excitation_emission(obj);
@@ -200,9 +203,9 @@ function plot_excitation_emission(obj)
         draw_lines_wavelength_range(obj, src);
     end
 
-    function reset_wavelength_range(obj)
+    function reset_wavelength_range(obj, src, event)
         reset_wavelengths(obj);
-        set_spectra(obj);
+        set_spectra(obj, src, event);
     end
 
     function color_limits_changed(obj, src, event)

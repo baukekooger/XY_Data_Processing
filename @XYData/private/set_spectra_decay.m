@@ -51,17 +51,11 @@ obj.plotdata.time_decay = ...
 % sample includes time before the pulse and normalization is done with 
 % respect to the highest sample 
 
-mean_beginning = mean(obj.plotdata.spectra_decay(:,:,:,1:10), 4); 
+% mean_beginning = mean(obj.plotdata.spectra_decay(:,:,:,1:10), 4); 
 max_values = maxk(obj.plotdata.spectra_decay, 10, 4);
 mean_maxvalues = mean(max_values, 4); 
 
-if mean_beginning < 0.5*mean_maxvalues
-    obj.plotdata.spectra_decay = obj.plotdata.spectra_decay(:, :, ...
-        ex_index, t_start_index:t_stop_index) ./ ...
-        max(obj.plotdata.spectra_decay, [], 4); 
-else
-    obj.plotdata.spectra_decay = obj.plotdata.spectra_decay(:, :, ...
-        ex_index, :) ./ mean_maxvalues; 
-end
+obj.plotdata.spectra_decay = obj.plotdata.spectra_decay(:, :, ...
+ex_index, :) ./ mean_maxvalues; 
 
 end
