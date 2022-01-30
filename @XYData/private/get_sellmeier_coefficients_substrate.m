@@ -13,7 +13,7 @@ function [nsub_a, nsub_b, plotfigure] = get_sellmeier_coefficients_substrate(obj
         case 'borofloat'
             subdata = importdata('Borofloat_Data.dat'); 
         case 'quartz'
-            subdata = improtdata('Quartz_Data.dat'); 
+            subdata = importdata('Quartz_Data.dat'); 
     end
     
     wavelengths = subdata.data(:, 1); 

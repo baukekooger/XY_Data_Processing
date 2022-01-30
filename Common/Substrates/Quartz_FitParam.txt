@@ -1,0 +1,11 @@
+       Thickness	500	+-	0
+Refractive index	1.46	+-	0
+  Initial lambda	93.1	+-	0
+   Absor. factor	1	+-	0
+   Absor. lambda	1	+-	0
+    Dispersion 0	0	+-	6.7e-55
+    Dispersion 1	0	+-	3.1e-61
+    Dispersion 2	0	+-	0
+       Roughness	0	+-	9e-16
+        Subst. n	1.46	+-	2.68e-05
+  Subst. IniLamb	93.1	+-	0.125
